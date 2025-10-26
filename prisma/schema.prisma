@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Utilisateur unique avec deux profils
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Profils Jordan & Juliette
+model Profile {
+  id        String   @id @default(cuid())
+  name      String   @unique // "jordan" ou "juliette"
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  recettes      Recette[]
+  abonnements   Abonnement[]
+  gardesAnimaux GardeAnimaux[]
+}
+
+// Section Cuisine - Recettes
+model Recette {
+  id           String   @id @default(cuid())
+  titre        String
+  description  String?
+  ingredients  String // JSON array
+  etapes       String // JSON array
+  tempsPrep    Int? // en minutes
+  tempsCuisson Int? // en minutes
+  portions     Int?
+  categorie    String?
+  image        String?
+  favorite     Boolean  @default(false)
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+// Section Argent - Abonnements
+model Abonnement {
+  id          String   @id @default(cuid())
+  nom         String
+  prix        Float
+  frequence   String // "mensuel", "annuel", "hebdomadaire"
+  dateDebut   DateTime
+  dateFin     DateTime?
+  actif       Boolean  @default(true)
+  categorie   String? // "streaming", "sport", "logiciel", etc.
+  description String?
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+// Section Animaux - Gardes
+model GardeAnimaux {
+  id          String   @id @default(cuid())
+  typeAnimal  String // "Chien", "Chat", etc.
+  nomAnimal   String
+  nomClient   String
+  contact     String
+  dateDebut   DateTime
+  dateFin     DateTime
+  duree       String // "2 jours", "1 visite", etc.
+  tarif       Float
+  typeGarde   String // "Garde chez moi", "Visite", etc.
+  statut      String   @default("confirmé") // "confirmé", "terminé", "annulé"
+  notes       String?
+  photos      String[] @default([]) // Array d'URLs des photos
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([profileId])
+  @@index([dateDebut])
+}
