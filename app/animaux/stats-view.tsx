@@ -18,7 +18,7 @@ import {
   Legend, 
   ResponsiveContainer 
 } from "recharts"
-import { TrendingUp, Users, DollarSign, Calendar, Filter } from "lucide-react"
+import { TrendingUp, DollarSign, Filter } from "lucide-react"
 
 interface GardeAnimaux {
   id: string
@@ -149,12 +149,7 @@ export function StatsView({ gardes }: StatsViewProps) {
       .sort((a, b) => b.value - a.value)
   }, [filteredGardes])
 
-  // Stats globales
-  const totalRevenue = filteredGardes
-    .filter((g) => g.statut === "terminé")
-    .reduce((sum, g) => sum + g.tarif, 0)
-  const averageRevenue = totalRevenue / Math.max(filteredGardes.filter((g) => g.statut === "terminé").length, 1)
-  const uniqueClients = new Set(filteredGardes.map((g) => g.nomClient)).size
+  // Stats globales - supprimées car déjà présentes dans la page principale
 
   return (
     <div className="space-y-6">
@@ -236,51 +231,6 @@ export function StatsView({ gardes }: StatsViewProps) {
         </CardContent>
       </Card>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="relative bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 rounded-2xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 to-teal-400/10 opacity-50 group-hover:opacity-70 transition-opacity"></div>
-          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Revenu total</CardTitle>
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-              <DollarSign className="h-5 w-5 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-2xl font-bold text-emerald-900">{totalRevenue.toFixed(2)} €</div>
-            <p className="text-xs text-emerald-600 mt-1">Moyenne: {averageRevenue.toFixed(2)} €</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 rounded-2xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 opacity-50 group-hover:opacity-70 transition-opacity"></div>
-          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Clients uniques</CardTitle>
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-              <Users className="h-5 w-5 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-2xl font-bold text-blue-900">{uniqueClients}</div>
-            <p className="text-xs text-blue-600 mt-1">clients différents</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 rounded-2xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-rose-400/10 to-pink-400/10 opacity-50 group-hover:opacity-70 transition-opacity"></div>
-          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold text-rose-700 uppercase tracking-wide">Total gardes</CardTitle>
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-              <Calendar className="h-5 w-5 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-2xl font-bold text-rose-900">{filteredGardes.length}</div>
-            <p className="text-xs text-rose-600 mt-1">gardes filtrées</p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Graphiques */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gardes par source */}
@@ -299,7 +249,8 @@ export function StatsView({ gardes }: StatsViewProps) {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -350,7 +301,8 @@ export function StatsView({ gardes }: StatsViewProps) {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
