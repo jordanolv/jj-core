@@ -511,17 +511,6 @@ export default function AnimauxPage() {
                           </span>
                         </div>
 
-                        {/* Icône Edit en haut à droite */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleEditGarde(garde)
-                          }}
-                          className="absolute top-3 right-3 z-10 p-0 hover:scale-110 transition-transform cursor-pointer"
-                        >
-                          <Edit2 className="h-3.5 w-3.5 text-slate-400 hover:text-slate-600" />
-                        </button>
-
                         <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4">
                           {/* Photo + Nom de l'animal */}
                           <div className="flex items-center gap-3">
