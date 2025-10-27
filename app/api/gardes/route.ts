@@ -7,6 +7,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const showJordan = searchParams.get("jordan") === "true"
     const showJuliette = searchParams.get("juliette") === "true"
+    const showCommune = searchParams.get("commune") === "true"
+    const showAll = searchParams.get("all") === "true"
 
     // Récupérer les IDs des profils
     const profiles = await prisma.profile.findMany({
@@ -19,28 +21,38 @@ export async function GET(request: NextRequest) {
 
     let where
 
-    if (!showJordan && !showJuliette) {
-      // Aucun filtre → uniquement les gardes communes
-      where = { isShared: true }
-    } else if (showJordan && showJuliette) {
-      // Les deux cochés → toutes les gardes
+    // Si "all" est demandé, afficher tout
+    if (showAll) {
       where = {}
-    } else if (showJordan) {
-      // Jordan coché → gardes de Jordan (personnelles + communes)
-      where = {
-        OR: [
-          { profileId: jordanId, isShared: false },
-          { isShared: true }
-        ]
+    } 
+    // Si uniquement commune est coché, afficher uniquement les communes
+    else if (showCommune && !showJordan && !showJuliette) {
+      where = { isShared: true }
+    }
+    // Si des profils sont cochés
+    else if (showJordan || showJuliette) {
+      const conditions = []
+      
+      // Ajouter les gardes de Jordan si coché
+      if (showJordan) {
+        conditions.push({ profileId: jordanId, isShared: false })
       }
-    } else if (showJuliette) {
-      // Juliette coché → gardes de Juliette (personnelles + communes)
-      where = {
-        OR: [
-          { profileId: julietteId, isShared: false },
-          { isShared: true }
-        ]
+      
+      // Ajouter les gardes de Juliette si coché
+      if (showJuliette) {
+        conditions.push({ profileId: julietteId, isShared: false })
       }
+      
+      // Ajouter les communes si coché
+      if (showCommune) {
+        conditions.push({ isShared: true })
+      }
+      
+      where = { OR: conditions }
+    }
+    // Aucun filtre (ne devrait pas arriver car on envoie "all")
+    else {
+      where = {}
     }
 
     const gardes = await prisma.gardeAnimaux.findMany({
@@ -75,6 +87,7 @@ export async function POST(request: NextRequest) {
       source,
       dateDebut,
       dateFin,
+      duree,
       tarif,
       typeGarde,
       statut,
@@ -100,6 +113,7 @@ export async function POST(request: NextRequest) {
         source: source || null,
         dateDebut: new Date(dateDebut),
         dateFin: new Date(dateFin),
+        duree: duree || null,
         tarif: parseFloat(tarif),
         typeGarde,
         statut: statut || "confirmé",

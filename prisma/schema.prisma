@@ -83,6 +83,7 @@ model GardeAnimaux {
   source      String? // Comment nous ont-ils connus (Instagram, Bouche à oreille, etc.)
   dateDebut   DateTime
   dateFin     DateTime
+  duree       String? // "2 jours", "1 semaine", etc.
   tarif       Float
   typeGarde   String // "Garde chez moi", "Visite", etc.
   statut      String   @default("confirmé") // "confirmé", "terminé", "annulé"

@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Calendar, DollarSign, PawPrint, CalendarDays, List, Edit2 } from "lucide-react"
-import { GardeForm } from "./garde-form"
+import { Plus, Calendar, DollarSign, PawPrint, CalendarDays, List, Edit2, Trash2, Dog, Cat } from "lucide-react"
+import { MobileGardeForm } from "./mobile-garde-form"
 import { CalendarView } from "./calendar-view"
 import Image from "next/image"
 import Header from "@/components/header"
@@ -19,6 +19,7 @@ interface GardeAnimaux {
   source?: string
   dateDebut: string
   dateFin: string
+  duree?: string
   tarif: number
   typeGarde: string
   statut: "confirmé" | "terminé" | "annulé"
@@ -40,18 +41,29 @@ export default function AnimauxPage() {
   const [filter] = useState<"tous" | "confirmé" | "terminé">("tous")
   const [filterJordan, setFilterJordan] = useState<boolean>(false)
   const [filterJuliette, setFilterJuliette] = useState<boolean>(false)
+  const [filterCommune, setFilterCommune] = useState<boolean>(false)
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list")
+  const [swipedGarde, setSwipedGarde] = useState<{ id: string; direction: "left" | "right" } | null>(null)
+  const [touchStart, setTouchStart] = useState<{ x: number; gardeId: string } | null>(null)
 
-  const loadGardes = async (showJordan: boolean, showJuliette: boolean) => {
+  const loadGardes = async (showJordan: boolean, showJuliette: boolean, showCommune: boolean) => {
     try {
-      // Aucun filtre = uniquement les gardes communes
-      // Jordan coché = gardes de Jordan + communes
-      // Juliette coché = gardes de Juliette + communes
-      // Les deux cochés = toutes les gardes
+      // Aucun filtre coché = tout afficher
+      // Profil(s) coché(s) = uniquement les gardes de ces profils
+      // Commune cochée = uniquement les gardes communes
+      // Combinaison = gardes des profils + communes si commune coché
+      
       const params = new URLSearchParams()
-      if (showJordan) params.append('jordan', 'true')
-      if (showJuliette) params.append('juliette', 'true')
+      
+      // Si rien n'est coché, afficher tout
+      if (!showJordan && !showJuliette && !showCommune) {
+        params.append('all', 'true')
+      } else {
+        if (showJordan) params.append('jordan', 'true')
+        if (showJuliette) params.append('juliette', 'true')
+        if (showCommune) params.append('commune', 'true')
+      }
       
       const url = `/api/gardes${params.toString() ? '?' + params.toString() : ''}`
       const response = await fetch(url)
@@ -76,7 +88,7 @@ export default function AnimauxPage() {
         
         if (currentProfile) {
           setProfileId(currentProfile.id)
-          loadGardes(false, false) // Par défaut, uniquement les gardes communes
+          loadGardes(false, false, false) // Par défaut, tout afficher
         }
       } catch (error) {
         console.error("Error initializing profile:", error)
@@ -96,14 +108,9 @@ export default function AnimauxPage() {
   // Recharger les gardes quand les filtres changent
   useEffect(() => {
     if (profileId) {
-      loadGardes(filterJordan, filterJuliette)
+      loadGardes(filterJordan, filterJuliette, filterCommune)
     }
-  }, [filterJordan, filterJuliette, profileId])
-
-  const handleGardeCreated = () => {
-    loadGardes(filterJordan, filterJuliette)
-    setSelectedGarde(null)
-  }
+  }, [filterJordan, filterJuliette, filterCommune, profileId])
 
   const handleEditGarde = (garde: GardeAnimaux) => {
     setSelectedGarde(garde)
@@ -115,11 +122,18 @@ export default function AnimauxPage() {
     setShowForm(true)
   }
 
-  const handleCloseForm = (open: boolean) => {
-    setShowForm(open)
-    if (!open) {
-      setSelectedGarde(null)
+  // Scroll en haut quand le formulaire s'ouvre
+  useEffect(() => {
+    if (showForm) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }, 100)
     }
+  }, [showForm])
+
+  const handleCloseForm = () => {
+    setShowForm(false)
+    setSelectedGarde(null)
   }
 
   const handleStatusChange = async (gardeId: string, newStatus: string) => {
@@ -131,13 +145,35 @@ export default function AnimauxPage() {
       })
 
       if (response.ok) {
-        loadGardes(filterJordan, filterJuliette)
+        loadGardes(filterJordan, filterJuliette, filterCommune)
       } else {
         alert("Erreur lors de la mise à jour du statut")
       }
     } catch (error) {
       console.error("Error updating status:", error)
       alert("Erreur lors de la mise à jour du statut")
+    }
+  }
+
+  const handleDeleteGarde = async (gardeId: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette garde ?")) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/gardes/${gardeId}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        setSwipedGarde(null)
+        loadGardes(filterJordan, filterJuliette, filterCommune)
+      } else {
+        alert("Erreur lors de la suppression")
+      }
+    } catch (error) {
+      console.error("Error deleting garde:", error)
+      alert("Erreur lors de la suppression")
     }
   }
 
@@ -152,6 +188,21 @@ export default function AnimauxPage() {
           <p className="mt-4 text-slate-700">Chargement...</p>
         </div>
       </div>
+    )
+  }
+
+  // Si le formulaire est affiché, montrer uniquement le formulaire mobile
+  if (showForm) {
+    return (
+      <MobileGardeForm
+        profileId={profileId}
+        garde={selectedGarde}
+        onCancel={handleCloseForm}
+        onSuccess={() => {
+          handleCloseForm()
+          loadGardes(filterJordan, filterJuliette, filterCommune)
+        }}
+      />
     )
   }
 
@@ -175,6 +226,21 @@ export default function AnimauxPage() {
         {/* Filtre par créateur */}
         <div className="mb-6 flex justify-end">
           <div className="inline-flex gap-1 rounded-lg border border-slate-200 bg-white/50 backdrop-blur-sm p-1 shadow-sm">
+            <label className="cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filterCommune}
+                onChange={(e) => setFilterCommune(e.target.checked)}
+                className="hidden"
+              />
+              <span className={`block px-3 py-1.5 text-base rounded-md transition-all ${
+                filterCommune
+                  ? "bg-gradient-to-r from-purple-400 to-violet-400 shadow-sm"
+                  : "opacity-40 hover:opacity-70"
+              }`}>
+                💑
+              </span>
+            </label>
             <label className="cursor-pointer">
               <input
                 type="checkbox"
@@ -204,6 +270,14 @@ export default function AnimauxPage() {
               }`}>
                 Juliette
               </span>
+            </label>
+            <label className="cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filterCommune}
+                onChange={(e) => setFilterCommune(e.target.checked)}
+                className="hidden"
+              />
             </label>
           </div>
         </div>
@@ -333,33 +407,96 @@ export default function AnimauxPage() {
                     }
 
                     const currentStatut = statutStyles[garde.statut] || statutStyles.confirmé
+                    const isSwipedLeft = swipedGarde?.id === garde.id && swipedGarde?.direction === "left"
+                    const isSwipedRight = swipedGarde?.id === garde.id && swipedGarde?.direction === "right"
+
+                    const handleTouchStart = (e: React.TouchEvent) => {
+                      setTouchStart({ x: e.touches[0].clientX, gardeId: garde.id })
+                    }
+
+                    const handleTouchEnd = (e: React.TouchEvent) => {
+                      if (!touchStart || touchStart.gardeId !== garde.id) return
+                      
+                      const touchEndX = e.changedTouches[0].clientX
+                      const swipeDistance = touchStart.x - touchEndX
+                      
+                      // Si la carte est déjà swipée, un tap la ferme
+                      if ((isSwipedLeft || isSwipedRight) && Math.abs(swipeDistance) < 10) {
+                        setSwipedGarde(null)
+                      }
+                      // Sinon, détection du swipe
+                      else if (swipeDistance > 50) {
+                        // Swipe vers la gauche → DELETE
+                        // Fermer toute autre carte ouverte
+                        setSwipedGarde({ id: garde.id, direction: "left" })
+                      } else if (swipeDistance < -50) {
+                        // Swipe vers la droite → EDIT
+                        // Fermer toute autre carte ouverte
+                        setSwipedGarde({ id: garde.id, direction: "right" })
+                      }
+                      
+                      setTouchStart(null)
+                    }
 
                     return (
-                      <div key={garde.id} className="relative bg-white/50 backdrop-blur-sm border border-white/60 rounded-2xl shadow-md overflow-hidden">
-                        {/* Badge créateur uniquement pour les gardes personnelles */}
-                        {!garde.isShared && (
-                          <div className="absolute top-3 left-3 z-10 flex gap-1">
-                            <span className={`px-2 py-1 rounded-md text-[10px] font-semibold shadow-sm ${
-                              garde.profile.name === "jordan" 
-                                ? "bg-gradient-to-r from-blue-400 to-indigo-400 text-white"
-                                : "bg-gradient-to-r from-rose-400 to-pink-400 text-white"
-                            }`}>
-                              {garde.profile.name === "jordan" ? "Jordan" : "Juliette"}
-                            </span>
+                      <div key={garde.id} className="relative overflow-visible">
+                        {/* Fond DELETE (rouge) à droite */}
+                        {isSwipedLeft && (
+                          <div 
+                            className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-end pr-6 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteGarde(garde.id)
+                            }}
+                          >
+                            <div className="flex items-center gap-2 text-white font-semibold pointer-events-none">
+                              <Trash2 className="h-5 w-5" />
+                              <span>Supprimer</span>
+                            </div>
                           </div>
                         )}
 
-                        {/* Icône Edit en haut à droite */}
-                        <button
-                          onClick={() => handleEditGarde(garde)}
-                          className="absolute top-3 right-3 z-10 p-0 hover:scale-110 transition-transform cursor-pointer"
+                        {/* Fond EDIT (bleu) à gauche */}
+                        {isSwipedRight && (
+                          <div 
+                            className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-start pl-6 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditGarde(garde)
+                              setSwipedGarde(null)
+                            }}
+                          >
+                            <div className="flex items-center gap-2 text-white font-semibold pointer-events-none">
+                              <Edit2 className="h-5 w-5" />
+                              <span>Modifier</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Carte qui peut glisser */}
+                        <div 
+                          className={`relative bg-white rounded-2xl shadow-md transition-transform duration-300 ${
+                            isSwipedLeft ? "-translate-x-32" : isSwipedRight ? "translate-x-32" : "translate-x-0"
+                          }`}
+                          onTouchStart={handleTouchStart}
+                          onTouchEnd={handleTouchEnd}
                         >
-                          <Edit2 className="h-3.5 w-3.5 text-slate-400 hover:text-slate-600" />
-                        </button>
+                        {/* Badge créateur */}
+                        <div className="absolute top-3 left-3 z-10 flex gap-1">
+                          <span className={`px-2 py-1 rounded-md text-[10px] font-semibold shadow-sm ${
+                            garde.isShared
+                              ? "bg-gradient-to-r from-purple-400 to-violet-400 text-white"
+                              : garde.profile.name === "jordan" 
+                                ? "bg-gradient-to-r from-blue-400 to-indigo-400 text-white"
+                                : "bg-gradient-to-r from-rose-400 to-pink-400 text-white"
+                          }`}>
+                            {garde.isShared ? "JJ" : (garde.profile.name === "jordan" ? "Jordan" : "Juliette")}
+                          </span>
+                        </div>
 
                         <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4">
-                          {/* Layout mobile: Photo + Titre + Prix sur la première ligne */}
-                          <div className="flex items-center gap-3 sm:contents">
+                          {/* Photo + Nom de l'animal */}
+                          <div className="flex items-center gap-3">
                             {/* Miniature de la première photo */}
                             {garde.photos && garde.photos.length > 0 ? (
                               <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-xl overflow-hidden ring-2 ring-white shadow-md">
@@ -376,6 +513,16 @@ export default function AnimauxPage() {
                               </div>
                             )}
 
+                            {/* Icône + Nom à droite de la photo */}
+                            <div className="flex items-center gap-2">
+                              {garde.typeAnimal.toLowerCase() === "chien" ? (
+                                <Dog className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                              ) : (
+                                <Cat className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                              )}
+                              <span className="text-base font-semibold text-slate-800 truncate">{garde.nomAnimal}</span>
+                            </div>
+
                             {/* Prix visible uniquement sur mobile */}
                             <div className="sm:hidden text-right ml-auto">
                               <p className="text-xl font-bold text-slate-800">
@@ -384,19 +531,15 @@ export default function AnimauxPage() {
                             </div>
                           </div>
 
-                          {/* Informations animal, client et dates */}
+                          {/* Informations client, type de garde et dates */}
                           <div className="flex-1 min-w-0 space-y-1.5">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-500">Type:</span>
-                              <span className="text-sm font-medium text-slate-700 truncate">{garde.typeAnimal}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-500">Nom:</span>
-                              <span className="text-sm font-medium text-slate-700 truncate">{garde.nomAnimal}</span>
-                            </div>
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-slate-500">Client:</span>
                               <span className="text-sm font-medium text-slate-700 truncate">{garde.nomClient}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500">Type:</span>
+                              <span className="text-sm font-medium text-slate-700 truncate">{garde.typeGarde}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                               <CalendarDays className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
@@ -412,11 +555,12 @@ export default function AnimauxPage() {
                             <div className="text-right">
                               <p className="text-2xl font-bold text-slate-800">
                                 {garde.tarif} €
-                              </p>
-                            </div>
+                          </p>
+                        </div>
                             <select
                               value={garde.statut}
                               onChange={(e) => handleStatusChange(garde.id, e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
                               className={`${currentStatut.bg} ${currentStatut.text} px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer shadow-md hover:shadow-lg transition-all border-0`}
                             >
                               <option value="confirmé">Confirmé</option>
@@ -431,6 +575,7 @@ export default function AnimauxPage() {
                             <select
                               value={garde.statut}
                               onChange={(e) => handleStatusChange(garde.id, e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
                               className={`${currentStatut.bg} ${currentStatut.text} px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer shadow-md hover:shadow-lg transition-all border-0 w-full`}
                             >
                               <option value="confirmé">Confirmé</option>
@@ -438,6 +583,7 @@ export default function AnimauxPage() {
                               <option value="terminé">Terminé</option>
                               <option value="annulé">Annulé</option>
                             </select>
+                          </div>
                           </div>
                         </div>
                       </div>
@@ -449,14 +595,6 @@ export default function AnimauxPage() {
           </Card>
         )}
       </main>
-
-      <GardeForm 
-        open={showForm} 
-        onOpenChange={handleCloseForm} 
-        onSuccess={handleGardeCreated} 
-        profileId={profileId}
-        garde={selectedGarde}
-      />
     </div>
   )
 }
