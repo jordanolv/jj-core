@@ -107,8 +107,8 @@ jobs:
             echo "🔄 Stop existing PM2 process"
             pm2 delete jj-core || true
 
-            echo "🚀 Start Application with PM2"
-            pm2 start npm --name "jj-core" -- start
+            echo "🚀 Start Application with PM2 (port 4490)"
+            PORT=4490 pm2 start npm --name "jj-core" -- start
             
             pm2 save
 
