@@ -254,7 +254,7 @@ export default function AnimauxPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filteredGardes.map((garde) => {
                     const statutStyles: Record<string, { bg: string; text: string }> = {
                       confirmé: {
@@ -279,6 +279,14 @@ export default function AnimauxPage() {
 
                     return (
                       <div key={garde.id} className="relative bg-white/50 backdrop-blur-sm border border-white/60 rounded-2xl shadow-md overflow-hidden">
+                        {/* Icône Edit en haut à droite */}
+                        <button
+                          onClick={() => handleEditGarde(garde)}
+                          className="absolute top-3 right-3 z-10 p-0 hover:scale-110 transition-transform cursor-pointer"
+                        >
+                          <Edit2 className="h-3.5 w-3.5 text-slate-400 hover:text-slate-600" />
+                        </button>
+
                         <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4">
                           {/* Layout mobile: Photo + Titre + Prix sur la première ligne */}
                           <div className="flex items-center gap-3 sm:contents">
@@ -298,20 +306,24 @@ export default function AnimauxPage() {
                               </div>
                             )}
 
-                            <div className="flex-1 min-w-0 sm:flex-none">
-                              <h3 className="font-bold text-base sm:text-lg text-slate-800 truncate">{garde.typeAnimal} {garde.nomAnimal}</h3>
-                            </div>
-                            
                             {/* Prix visible uniquement sur mobile */}
-                            <div className="sm:hidden text-right">
+                            <div className="sm:hidden text-right ml-auto">
                               <p className="text-xl font-bold text-slate-800">
                                 {garde.tarif} €
                               </p>
                             </div>
                           </div>
 
-                          {/* Informations client et dates */}
+                          {/* Informations animal, client et dates */}
                           <div className="flex-1 min-w-0 space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500">Type:</span>
+                              <span className="text-sm font-medium text-slate-700 truncate">{garde.typeAnimal}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500">Nom:</span>
+                              <span className="text-sm font-medium text-slate-700 truncate">{garde.nomAnimal}</span>
+                            </div>
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-slate-500">Client:</span>
                               <span className="text-sm font-medium text-slate-700 truncate">{garde.nomClient}</span>
@@ -324,34 +336,38 @@ export default function AnimauxPage() {
                             </div>
                           </div>
                           
-                          {/* Actions et prix (desktop) */}
-                          <div className="flex sm:flex-col items-center sm:items-end gap-2">
+                          {/* Prix et statut (desktop) */}
+                          <div className="hidden sm:flex sm:flex-col items-center sm:items-end gap-2 mt-auto">
                             {/* Prix visible uniquement sur desktop */}
-                            <div className="hidden sm:block text-right">
+                            <div className="text-right">
                               <p className="text-2xl font-bold text-slate-800">
                                 {garde.tarif} €
                               </p>
                             </div>
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditGarde(garde)}
-                                className="h-8 px-2 bg-white/50 hover:bg-white/80 border-slate-300 cursor-pointer"
-                              >
-                                <Edit2 className="h-3.5 w-3.5" />
-                              </Button>
-                              <select
-                                value={garde.statut}
-                                onChange={(e) => handleStatusChange(garde.id, e.target.value)}
-                                className={`${currentStatut.bg} ${currentStatut.text} px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer shadow-md hover:shadow-lg transition-all border-0 flex-1 sm:flex-none`}
-                              >
-                                <option value="confirmé">Confirmé</option>
-                                <option value="en_cours">En cours</option>
-                                <option value="terminé">Terminé</option>
-                                <option value="annulé">Annulé</option>
-                              </select>
-                            </div>
+                            <select
+                              value={garde.statut}
+                              onChange={(e) => handleStatusChange(garde.id, e.target.value)}
+                              className={`${currentStatut.bg} ${currentStatut.text} px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer shadow-md hover:shadow-lg transition-all border-0`}
+                            >
+                              <option value="confirmé">Confirmé</option>
+                              <option value="en_cours">En cours</option>
+                              <option value="terminé">Terminé</option>
+                              <option value="annulé">Annulé</option>
+                            </select>
+                          </div>
+
+                          {/* Statut (mobile) */}
+                          <div className="sm:hidden w-full">
+                            <select
+                              value={garde.statut}
+                              onChange={(e) => handleStatusChange(garde.id, e.target.value)}
+                              className={`${currentStatut.bg} ${currentStatut.text} px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer shadow-md hover:shadow-lg transition-all border-0 w-full`}
+                            >
+                              <option value="confirmé">Confirmé</option>
+                              <option value="en_cours">En cours</option>
+                              <option value="terminé">Terminé</option>
+                              <option value="annulé">Annulé</option>
+                            </select>
                           </div>
                         </div>
                       </div>
