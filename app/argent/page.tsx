@@ -19,7 +19,6 @@ interface Abonnement {
 
 export default function ArgentPage() {
   const router = useRouter()
-  const [profile, setProfile] = useState<string>("")
   const [abonnements, setAbonnements] = useState<Abonnement[]>([])
   const [showForm, setShowForm] = useState(false)
 
@@ -28,7 +27,6 @@ export default function ArgentPage() {
     if (!currentProfile) {
       router.push("/")
     } else {
-      setProfile(currentProfile)
       loadAbonnements()
     }
   }, [router])

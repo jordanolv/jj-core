@@ -21,7 +21,6 @@ interface Recette {
 
 export default function CuisinePage() {
   const router = useRouter()
-  const [profile, setProfile] = useState<string>("")
   const [recettes, setRecettes] = useState<Recette[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [showForm, setShowForm] = useState(false)
@@ -31,7 +30,6 @@ export default function CuisinePage() {
     if (!currentProfile) {
       router.push("/")
     } else {
-      setProfile(currentProfile)
       loadRecettes()
     }
   }, [router])
