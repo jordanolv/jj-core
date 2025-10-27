@@ -45,7 +45,7 @@ export default function AnimauxPage() {
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list")
   const [swipedGarde, setSwipedGarde] = useState<{ id: string; direction: "left" | "right" } | null>(null)
-  const [touchStart, setTouchStart] = useState<{ x: number; gardeId: string } | null>(null)
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number; gardeId: string } | null>(null)
 
   const loadGardes = async (showJordan: boolean, showJuliette: boolean, showCommune: boolean) => {
     try {
@@ -411,7 +411,25 @@ export default function AnimauxPage() {
                     const isSwipedRight = swipedGarde?.id === garde.id && swipedGarde?.direction === "right"
 
                     const handleTouchStart = (e: React.TouchEvent) => {
-                      setTouchStart({ x: e.touches[0].clientX, gardeId: garde.id })
+                      setTouchStart({ 
+                        x: e.touches[0].clientX,
+                        y: e.touches[0].clientY,
+                        gardeId: garde.id 
+                      })
+                    }
+
+                    const handleTouchMove = (e: React.TouchEvent) => {
+                      if (!touchStart || touchStart.gardeId !== garde.id) return
+                      
+                      const touchCurrentX = e.touches[0].clientX
+                      const touchCurrentY = e.touches[0].clientY
+                      const diffX = Math.abs(touchCurrentX - touchStart.x)
+                      const diffY = Math.abs(touchCurrentY - touchStart.y)
+                      
+                      // Si le mouvement est plus horizontal que vertical, empêcher le scroll/navigation
+                      if (diffX > diffY && diffX > 10) {
+                        e.preventDefault()
+                      }
                     }
 
                     const handleTouchEnd = (e: React.TouchEvent) => {
@@ -427,11 +445,9 @@ export default function AnimauxPage() {
                       // Sinon, détection du swipe
                       else if (swipeDistance > 50) {
                         // Swipe vers la gauche → DELETE
-                        // Fermer toute autre carte ouverte
                         setSwipedGarde({ id: garde.id, direction: "left" })
                       } else if (swipeDistance < -50) {
                         // Swipe vers la droite → EDIT
-                        // Fermer toute autre carte ouverte
                         setSwipedGarde({ id: garde.id, direction: "right" })
                       }
                       
@@ -479,6 +495,7 @@ export default function AnimauxPage() {
                             isSwipedLeft ? "-translate-x-32" : isSwipedRight ? "translate-x-32" : "translate-x-0"
                           }`}
                           onTouchStart={handleTouchStart}
+                          onTouchMove={handleTouchMove}
                           onTouchEnd={handleTouchEnd}
                         >
                         {/* Badge créateur */}
@@ -493,6 +510,17 @@ export default function AnimauxPage() {
                             {garde.isShared ? "JJ" : (garde.profile.name === "jordan" ? "Jordan" : "Juliette")}
                           </span>
                         </div>
+
+                        {/* Icône Edit en haut à droite */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditGarde(garde)
+                          }}
+                          className="absolute top-3 right-3 z-10 p-0 hover:scale-110 transition-transform cursor-pointer"
+                        >
+                          <Edit2 className="h-3.5 w-3.5 text-slate-400 hover:text-slate-600" />
+                        </button>
 
                         <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4">
                           {/* Photo + Nom de l'animal */}
