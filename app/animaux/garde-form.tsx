@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
-import { ImagePlus, X } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ImagePlus, X, Phone, MessageCircle, Instagram, Mail } from "lucide-react"
 import Image from "next/image"
 
 interface GardeFormProps {
@@ -18,10 +19,10 @@ interface GardeFormProps {
     typeAnimal: string
     nomAnimal: string
     nomClient: string
-    contact: string
+    contact?: string
+    source?: string
     dateDebut: string
     dateFin: string
-    duree: string
     tarif: number
     typeGarde: string
     statut: string
@@ -31,18 +32,46 @@ interface GardeFormProps {
   } | null
 }
 
+// Parse contact field: "type:value" format
+const parseContact = (contact: string) => {
+  if (!contact) return { type: "phone", value: "" }
+  const [type, ...valueParts] = contact.split(":")
+  return { type, value: valueParts.join(":") }
+}
+
+// Contact type icon component
+const ContactIcon = ({ type }: { type: string }) => {
+  const iconClass = "h-4 w-4"
+  switch (type) {
+    case "phone":
+      return <Phone className={iconClass} />
+    case "whatsapp":
+      return <MessageCircle className={iconClass} />
+    case "instagram":
+      return <Instagram className={iconClass} />
+    case "email":
+      return <Mail className={iconClass} />
+    default:
+      return <Phone className={iconClass} />
+  }
+}
+
 export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: GardeFormProps) {
   const [loading, setLoading] = useState(false)
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
   const [photos, setPhotos] = useState<string[]>(garde?.photos || [])
+  
+  const initialContact = parseContact(garde?.contact || "")
+  
   const [formData, setFormData] = useState({
     typeAnimal: garde?.typeAnimal || "",
     nomAnimal: garde?.nomAnimal || "",
     nomClient: garde?.nomClient || "",
-    contact: garde?.contact || "",
+    contactType: initialContact.type,
+    contactValue: initialContact.value,
+    source: garde?.source || "",
     dateDebut: garde?.dateDebut ? new Date(garde.dateDebut).toISOString().split('T')[0] : "",
     dateFin: garde?.dateFin ? new Date(garde.dateFin).toISOString().split('T')[0] : "",
-    duree: garde?.duree || "",
     tarif: garde?.tarif?.toString() || "",
     typeGarde: garde?.typeGarde || "",
     statut: garde?.statut || "confirmé",
@@ -53,14 +82,16 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
   // Réinitialiser le formulaire quand la garde change
   useEffect(() => {
     if (garde) {
+      const contact = parseContact(garde.contact || "")
       setFormData({
         typeAnimal: garde.typeAnimal,
         nomAnimal: garde.nomAnimal,
         nomClient: garde.nomClient,
-        contact: garde.contact,
+        contactType: contact.type,
+        contactValue: contact.value,
+        source: garde.source || "",
         dateDebut: new Date(garde.dateDebut).toISOString().split('T')[0],
         dateFin: new Date(garde.dateFin).toISOString().split('T')[0],
-        duree: garde.duree,
         tarif: garde.tarif.toString(),
         typeGarde: garde.typeGarde,
         statut: garde.statut,
@@ -73,10 +104,11 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
         typeAnimal: "",
         nomAnimal: "",
         nomClient: "",
-        contact: "",
+        contactType: "phone",
+        contactValue: "",
+        source: "",
         dateDebut: "",
         dateFin: "",
-        duree: "",
         tarif: "",
         typeGarde: "",
         statut: "confirmé",
@@ -135,7 +167,11 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
     }
 
     try {
-      const payload = { ...formData, profileId, photos }
+      // Combine contactType and contactValue into single contact field
+      const { contactType, contactValue, ...restFormData } = formData
+      const contact = contactValue ? `${contactType}:${contactValue}` : ""
+      
+      const payload = { ...restFormData, contact: contact || undefined, profileId, photos }
       console.log("Sending payload:", payload)
 
       const isEditing = !!garde
@@ -160,10 +196,11 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
           typeAnimal: "",
           nomAnimal: "",
           nomClient: "",
-          contact: "",
+          contactType: "phone",
+          contactValue: "",
+          source: "",
           dateDebut: "",
           dateFin: "",
-          duree: "",
           tarif: "",
           typeGarde: "",
           statut: "confirmé",
@@ -199,12 +236,19 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-1 block">Type d&apos;animal*</label>
-                  <Input
+                  <Select
                     required
-                    placeholder="Chien, Chat..."
                     value={formData.typeAnimal}
-                    onChange={(e) => setFormData({ ...formData, typeAnimal: e.target.value })}
-                  />
+                    onValueChange={(value) => setFormData({ ...formData, typeAnimal: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Chien">🐕 Chien</SelectItem>
+                      <SelectItem value="Chat">🐈 Chat</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Nom de l&apos;animal*</label>
@@ -228,14 +272,75 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Contact*</label>
-                  <Input
-                    required
-                    placeholder="06.12.34.56.78"
-                    value={formData.contact}
-                    onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                  />
+                  <label className="text-sm font-medium mb-1 block">Contact</label>
+                  <div className="flex h-10 w-full rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                    <Select
+                      value={formData.contactType}
+                      onValueChange={(value) => setFormData({ ...formData, contactType: value })}
+                    >
+                      <SelectTrigger className="h-full w-[60px] border-0 border-r rounded-r-none focus:ring-0 focus:ring-offset-0 bg-transparent">
+                        <ContactIcon type={formData.contactType} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="phone">
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4" />
+                            <span>Téléphone</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="whatsapp">
+                          <div className="flex items-center gap-2">
+                            <MessageCircle className="h-4 w-4" />
+                            <span>WhatsApp</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="instagram">
+                          <div className="flex items-center gap-2">
+                            <Instagram className="h-4 w-4" />
+                            <span>Instagram</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="email">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4" />
+                            <span>Email</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <input
+                      type="text"
+                      placeholder={
+                        formData.contactType === "phone" ? "06.12.34.56.78" :
+                        formData.contactType === "whatsapp" ? "06.12.34.56.78" :
+                        formData.contactType === "instagram" ? "@username" :
+                        "email@example.com"
+                      }
+                      value={formData.contactValue}
+                      onChange={(e) => setFormData({ ...formData, contactValue: e.target.value })}
+                      className="flex-1 px-3 py-2 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
+                    />
+                  </div>
                 </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1 block">Comment nous avez-vous connu ?</label>
+                <Select
+                  value={formData.source}
+                  onValueChange={(value) => setFormData({ ...formData, source: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Rover">🐕 Rover</SelectItem>
+                    <SelectItem value="Animaute">🐾 Animaute</SelectItem>
+                    <SelectItem value="Facebook">👥 Facebook</SelectItem>
+                    <SelectItem value="Instagram">📷 Instagram</SelectItem>
+                    <SelectItem value="Autre">📝 Autre</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
@@ -259,15 +364,6 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
                 </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-1 block">Durée</label>
-                <Input
-                  placeholder="2 jours, 1 visite..."
-                  value={formData.duree}
-                  onChange={(e) => setFormData({ ...formData, duree: e.target.value })}
-                />
-              </div>
-
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-1 block">Tarif (€)*</label>
@@ -282,11 +378,19 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Type de garde</label>
-                  <Input
-                    placeholder="Garde chez moi, Visite..."
+                  <Select
                     value={formData.typeGarde}
-                    onChange={(e) => setFormData({ ...formData, typeGarde: e.target.value })}
-                  />
+                    onValueChange={(value) => setFormData({ ...formData, typeGarde: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Garde chez moi">🏠 Garde chez moi</SelectItem>
+                      <SelectItem value="Visite à domicile">🚪 Visite à domicile</SelectItem>
+                      <SelectItem value="Promenade">🐾 Promenade</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

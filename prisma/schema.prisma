@@ -79,10 +79,10 @@ model GardeAnimaux {
   typeAnimal  String // "Chien", "Chat", etc.
   nomAnimal   String
   nomClient   String
-  contact     String
+  contact     String?
+  source      String? // Comment nous ont-ils connus (Instagram, Bouche à oreille, etc.)
   dateDebut   DateTime
   dateFin     DateTime
-  duree       String // "2 jours", "1 visite", etc.
   tarif       Float
   typeGarde   String // "Garde chez moi", "Visite", etc.
   statut      String   @default("confirmé") // "confirmé", "terminé", "annulé"

@@ -15,10 +15,10 @@ interface GardeAnimaux {
   typeAnimal: string
   nomAnimal: string
   nomClient: string
-  contact: string
+  contact?: string
+  source?: string
   dateDebut: string
   dateFin: string
-  duree: string
   tarif: number
   typeGarde: string
   statut: "confirmé" | "terminé" | "annulé"
