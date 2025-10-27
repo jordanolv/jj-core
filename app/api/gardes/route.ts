@@ -1,18 +1,58 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 
-// GET - Récupérer toutes les gardes
+// GET - Récupérer les gardes selon les filtres
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const profileId = searchParams.get("profileId")
+    const showJordan = searchParams.get("jordan") === "true"
+    const showJuliette = searchParams.get("juliette") === "true"
 
-    if (!profileId) {
-      return NextResponse.json({ error: "Profile ID required" }, { status: 400 })
+    // Récupérer les IDs des profils
+    const profiles = await prisma.profile.findMany({
+      where: {
+        name: { in: ["jordan", "juliette"] }
+      }
+    })
+    const jordanId = profiles.find(p => p.name === "jordan")?.id
+    const julietteId = profiles.find(p => p.name === "juliette")?.id
+
+    let where: any
+
+    if (!showJordan && !showJuliette) {
+      // Aucun filtre → uniquement les gardes communes
+      where = { isShared: true }
+    } else if (showJordan && showJuliette) {
+      // Les deux cochés → toutes les gardes
+      where = {}
+    } else if (showJordan) {
+      // Jordan coché → gardes de Jordan (personnelles + communes)
+      where = {
+        OR: [
+          { profileId: jordanId, isShared: false },
+          { isShared: true }
+        ]
+      }
+    } else if (showJuliette) {
+      // Juliette coché → gardes de Juliette (personnelles + communes)
+      where = {
+        OR: [
+          { profileId: julietteId, isShared: false },
+          { isShared: true }
+        ]
+      }
     }
 
     const gardes = await prisma.gardeAnimaux.findMany({
-      where: { profileId },
+      where,
+      include: {
+        profile: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       orderBy: { dateDebut: "desc" },
     })
 
@@ -41,6 +81,7 @@ export async function POST(request: NextRequest) {
       notes,
       profileId,
       photos,
+      isShared,
     } = body
 
     if (!profileId || !typeAnimal || !nomAnimal || !nomClient) {
@@ -64,6 +105,7 @@ export async function POST(request: NextRequest) {
         statut: statut || "confirmé",
         notes,
         photos: photos || [],
+        isShared: isShared || false,
         profileId,
       },
     })

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Plus, Calendar, DollarSign, TrendingUp } from "lucide-react"
+import { Plus, Calendar, DollarSign, TrendingUp } from "lucide-react"
+import Header from "@/components/header"
 
 interface Abonnement {
   id: string
@@ -19,6 +20,7 @@ interface Abonnement {
 
 export default function ArgentPage() {
   const router = useRouter()
+  const [profile, setProfile] = useState<string>("")
   const [abonnements, setAbonnements] = useState<Abonnement[]>([])
   const [showForm, setShowForm] = useState(false)
 
@@ -27,6 +29,7 @@ export default function ArgentPage() {
     if (!currentProfile) {
       router.push("/")
     } else {
+      setProfile(currentProfile)
       loadAbonnements()
     }
   }, [router])
@@ -56,26 +59,22 @@ export default function ArgentPage() {
     autre: "bg-gray-100 text-gray-700 border-gray-200",
   }
 
+  if (!profile) return null
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
-      {/* Header */}
-      <header className="border-b bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">Argent</h1>
-              <p className="text-sm text-gray-500">Gérez vos abonnements</p>
-            </div>
-          </div>
+      <Header 
+        profile={profile}
+        title="Argent"
+        description="Gérez vos abonnements"
+        showBack={true}
+        actions={
           <Button onClick={() => setShowForm(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Nouvel abonnement
           </Button>
-        </div>
-      </header>
+        }
+      />
 
       {/* Content */}
       <main className="container mx-auto px-4 py-8">

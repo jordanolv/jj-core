@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Plus, Clock, Users, Heart, Search } from "lucide-react"
+import { Plus, Clock, Users, Heart, Search } from "lucide-react"
+import Header from "@/components/header"
 
 interface Recette {
   id: string
@@ -21,6 +22,7 @@ interface Recette {
 
 export default function CuisinePage() {
   const router = useRouter()
+  const [profile, setProfile] = useState<string>("")
   const [recettes, setRecettes] = useState<Recette[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [showForm, setShowForm] = useState(false)
@@ -30,6 +32,7 @@ export default function CuisinePage() {
     if (!currentProfile) {
       router.push("/")
     } else {
+      setProfile(currentProfile)
       loadRecettes()
     }
   }, [router])
@@ -46,26 +49,22 @@ export default function CuisinePage() {
     r.titre.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  if (!profile) return null
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
-      {/* Header */}
-      <header className="border-b bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">Cuisine</h1>
-              <p className="text-sm text-gray-500">Gérez vos recettes</p>
-            </div>
-          </div>
+      <Header 
+        profile={profile}
+        title="Cuisine"
+        description="Gérez vos recettes"
+        showBack={true}
+        actions={
           <Button onClick={() => setShowForm(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Nouvelle recette
           </Button>
-        </div>
-      </header>
+        }
+      />
 
       {/* Content */}
       <main className="container mx-auto px-4 py-8">

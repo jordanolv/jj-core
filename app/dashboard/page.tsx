@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ChefHat, DollarSign, PawPrint, LogOut } from "lucide-react"
+import { ChefHat, DollarSign, PawPrint } from "lucide-react"
+import Header from "@/components/header"
 
 export default function Dashboard() {
   const router = useRouter()
@@ -18,11 +18,6 @@ export default function Dashboard() {
       setProfile(currentProfile)
     }
   }, [router])
-
-  const handleLogout = () => {
-    localStorage.removeItem("currentProfile")
-    router.push("/")
-  }
 
   if (!profile) return null
 
@@ -58,27 +53,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-100 via-rose-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-white/50 backdrop-blur-md shadow-sm border-b border-white/60">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
-              <span className="text-base font-bold text-white">
-                {profile === "jordan" ? "J" : "J"}
-              </span>
-            </div>
-            <div className="flex flex-col justify-center">
-              <p className="text-sm text-slate-600 leading-tight">
-                Bienvenue {profile === "jordan" ? "Jordan" : "Juliette"} ✨
-              </p>
-            </div>
-          </div>
-          <Button onClick={handleLogout} variant="outline" size="sm" className="bg-white/50 hover:bg-white/80 border-slate-300">
-            <LogOut className="mr-2 h-4 w-4" />
-            Déconnexion
-          </Button>
-        </div>
-      </header>
+      <Header profile={profile} />
 
       {/* Dashboard Content */}
       <main className="relative z-10 flex items-center justify-center min-h-[calc(100vh-73px)] px-4 py-12">

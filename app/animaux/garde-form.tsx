@@ -27,6 +27,7 @@ interface GardeFormProps {
     statut: string
     photos: string[]
     notes?: string
+    isShared?: boolean
   } | null
 }
 
@@ -46,6 +47,7 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
     typeGarde: garde?.typeGarde || "",
     statut: garde?.statut || "confirmé",
     notes: garde?.notes || "",
+    isShared: garde?.isShared || false,
   })
 
   // Réinitialiser le formulaire quand la garde change
@@ -63,6 +65,7 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
         typeGarde: garde.typeGarde,
         statut: garde.statut,
         notes: garde.notes || "",
+        isShared: garde.isShared || false,
       })
       setPhotos(garde.photos)
     } else {
@@ -78,6 +81,7 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
         typeGarde: "",
         statut: "confirmé",
         notes: "",
+        isShared: false,
       })
       setPhotos([])
     }
@@ -164,6 +168,7 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
           typeGarde: "",
           statut: "confirmé",
           notes: "",
+          isShared: false,
         })
         setPhotos([])
       } else {
@@ -294,6 +299,26 @@ export function GardeForm({ open, onOpenChange, onSuccess, profileId, garde }: G
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
+              </div>
+
+              <div className="flex items-center gap-2 p-4 rounded-lg border border-purple-200 bg-purple-50/50">
+                <input
+                  type="checkbox"
+                  id="isShared"
+                  checked={formData.isShared}
+                  onChange={(e) => setFormData({ ...formData, isShared: e.target.checked })}
+                  className="h-4 w-4 rounded border-purple-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                />
+                <label htmlFor="isShared" className="text-sm font-medium text-purple-900 cursor-pointer flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-xs font-semibold bg-gradient-to-r from-purple-400 to-violet-400 text-white">
+                      Garde commune
+                    </span>
+                    <span className="text-purple-700">
+                      Les revenus seront partagés entre Jordan et Juliette
+                    </span>
+                  </div>
+                </label>
               </div>
 
               <div>

@@ -4,10 +4,11 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Plus, Calendar, DollarSign, PawPrint, CalendarDays, List, Edit2 } from "lucide-react"
+import { Plus, Calendar, DollarSign, PawPrint, CalendarDays, List, Edit2 } from "lucide-react"
 import { GardeForm } from "./garde-form"
 import { CalendarView } from "./calendar-view"
 import Image from "next/image"
+import Header from "@/components/header"
 
 interface GardeAnimaux {
   id: string
@@ -23,6 +24,11 @@ interface GardeAnimaux {
   statut: "confirmé" | "terminé" | "annulé"
   photos: string[]
   notes?: string
+  isShared: boolean
+  profile: {
+    id: string
+    name: string
+  }
 }
 
 export default function AnimauxPage() {
@@ -32,12 +38,23 @@ export default function AnimauxPage() {
   const [showForm, setShowForm] = useState(false)
   const [selectedGarde, setSelectedGarde] = useState<GardeAnimaux | null>(null)
   const [filter] = useState<"tous" | "confirmé" | "terminé">("tous")
+  const [filterJordan, setFilterJordan] = useState<boolean>(false)
+  const [filterJuliette, setFilterJuliette] = useState<boolean>(false)
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list")
 
-  const loadGardes = async (profId: string) => {
+  const loadGardes = async (showJordan: boolean, showJuliette: boolean) => {
     try {
-      const response = await fetch(`/api/gardes?profileId=${profId}`)
+      // Aucun filtre = uniquement les gardes communes
+      // Jordan coché = gardes de Jordan + communes
+      // Juliette coché = gardes de Juliette + communes
+      // Les deux cochés = toutes les gardes
+      const params = new URLSearchParams()
+      if (showJordan) params.append('jordan', 'true')
+      if (showJuliette) params.append('juliette', 'true')
+      
+      const url = `/api/gardes${params.toString() ? '?' + params.toString() : ''}`
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         setGardes(data)
@@ -54,11 +71,12 @@ export default function AnimauxPage() {
       try {
         await fetch("/api/init", { method: "POST" })
         const profilesRes = await fetch("/api/profiles")
-        const profiles = await profilesRes.json()
-        const currentProfile = profiles.find((p: { name: string; id: string }) => p.name === profileName)
+        const profilesList = await profilesRes.json()
+        const currentProfile = profilesList.find((p: { name: string; id: string }) => p.name === profileName)
+        
         if (currentProfile) {
           setProfileId(currentProfile.id)
-          loadGardes(currentProfile.id)
+          loadGardes(false, false) // Par défaut, uniquement les gardes communes
         }
       } catch (error) {
         console.error("Error initializing profile:", error)
@@ -75,8 +93,15 @@ export default function AnimauxPage() {
      
   }, [router])
 
+  // Recharger les gardes quand les filtres changent
+  useEffect(() => {
+    if (profileId) {
+      loadGardes(filterJordan, filterJuliette)
+    }
+  }, [filterJordan, filterJuliette, profileId])
+
   const handleGardeCreated = () => {
-    if (profileId) loadGardes(profileId)
+    loadGardes(filterJordan, filterJuliette)
     setSelectedGarde(null)
   }
 
@@ -106,7 +131,7 @@ export default function AnimauxPage() {
       })
 
       if (response.ok) {
-        loadGardes(profileId)
+        loadGardes(filterJordan, filterJuliette)
       } else {
         alert("Erreur lors de la mise à jour du statut")
       }
@@ -132,25 +157,57 @@ export default function AnimauxPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-100 via-rose-50 to-blue-50">
-      <header className="bg-white/50 backdrop-blur-md shadow-sm border-b border-white/60">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")} className="hover:bg-white/60">
-              <ArrowLeft className="h-5 w-5 text-slate-700" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-800">Animaux</h1>
-              <p className="text-sm text-slate-500">Gérez vos gardes d&apos;animaux</p>
-            </div>
-          </div>
-          <Button onClick={handleNewGarde} className="bg-gradient-to-r from-rose-400 to-pink-400 hover:from-rose-500 hover:to-pink-500 text-white border-0 shadow-md">
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle garde
+      <Header 
+        profile={profileId}
+        title="Animaux"
+        description="Gérez vos gardes d'animaux"
+        showBack={true}
+        actions={
+          <Button onClick={handleNewGarde} className="bg-gradient-to-r from-rose-400 to-pink-400 hover:from-rose-500 hover:to-pink-500 text-white border-0 shadow-md mr-2">
+            <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="sm:hidden">New</span>
+            <span className="hidden sm:inline">Nouvelle garde</span>
           </Button>
-        </div>
-      </header>
+        }
+      />
 
       <main className="container mx-auto px-4 py-8 relative z-10">
+        {/* Filtre par créateur */}
+        <div className="mb-6 flex justify-end">
+          <div className="inline-flex gap-1 rounded-lg border border-slate-200 bg-white/50 backdrop-blur-sm p-1 shadow-sm">
+            <label className="cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filterJordan}
+                onChange={(e) => setFilterJordan(e.target.checked)}
+                className="hidden"
+              />
+              <span className={`block px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                filterJordan
+                  ? "bg-gradient-to-r from-blue-400 to-indigo-400 text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-800"
+              }`}>
+                Jordan
+              </span>
+            </label>
+            <label className="cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filterJuliette}
+                onChange={(e) => setFilterJuliette(e.target.checked)}
+                className="hidden"
+              />
+              <span className={`block px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                filterJuliette
+                  ? "bg-gradient-to-r from-rose-400 to-pink-400 text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-800"
+              }`}>
+                Juliette
+              </span>
+            </label>
+          </div>
+        </div>
+
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card className="relative bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 rounded-2xl overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 to-teal-400/10 opacity-50 group-hover:opacity-70 transition-opacity"></div>
@@ -279,6 +336,19 @@ export default function AnimauxPage() {
 
                     return (
                       <div key={garde.id} className="relative bg-white/50 backdrop-blur-sm border border-white/60 rounded-2xl shadow-md overflow-hidden">
+                        {/* Badge créateur uniquement pour les gardes personnelles */}
+                        {!garde.isShared && (
+                          <div className="absolute top-3 left-3 z-10 flex gap-1">
+                            <span className={`px-2 py-1 rounded-md text-[10px] font-semibold shadow-sm ${
+                              garde.profile.name === "jordan" 
+                                ? "bg-gradient-to-r from-blue-400 to-indigo-400 text-white"
+                                : "bg-gradient-to-r from-rose-400 to-pink-400 text-white"
+                            }`}>
+                              {garde.profile.name === "jordan" ? "Jordan" : "Juliette"}
+                            </span>
+                          </div>
+                        )}
+
                         {/* Icône Edit en haut à droite */}
                         <button
                           onClick={() => handleEditGarde(garde)}

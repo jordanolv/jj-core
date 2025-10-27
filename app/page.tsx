@@ -1,18 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function Home() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    // Si déjà authentifié et qu'il a un profil sélectionné, rediriger vers le dashboard
+    if (session && localStorage.getItem("currentProfile")) {
+      router.push("/dashboard")
+    }
+  }, [session, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,8 +33,6 @@ export default function Home() {
 
     if (result?.error) {
       setError("Email ou mot de passe incorrect")
-    } else {
-      setIsAuthenticated(true)
     }
   }
 
@@ -36,7 +41,15 @@ export default function Home() {
     router.push("/dashboard")
   }
 
-  if (!isAuthenticated) {
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-100 via-rose-50 to-blue-50">
+        <div className="text-slate-600">Chargement...</div>
+      </div>
+    )
+  }
+
+  if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-100 via-rose-50 to-blue-50 p-4">
         <Card className="w-full max-w-md bg-white/50 backdrop-blur-sm border border-white/60 shadow-xl rounded-2xl">
