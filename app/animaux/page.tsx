@@ -4,9 +4,10 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Calendar, DollarSign, PawPrint, CalendarDays, List, Edit2, Trash2, Dog, Cat } from "lucide-react"
+import { Plus, Calendar, DollarSign, PawPrint, CalendarDays, List, Trash2, Dog, Cat, BarChart3, Edit2 } from "lucide-react"
 import { MobileGardeForm } from "./mobile-garde-form"
 import { CalendarView } from "./calendar-view"
+import { StatsView } from "./stats-view"
 import Image from "next/image"
 import Header from "@/components/header"
 
@@ -43,7 +44,7 @@ export default function AnimauxPage() {
   const [filterJuliette, setFilterJuliette] = useState<boolean>(false)
   const [filterCommune, setFilterCommune] = useState<boolean>(false)
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<"list" | "calendar">("list")
+  const [viewMode, setViewMode] = useState<"list" | "calendar" | "stats">("list")
   const [swipedGarde, setSwipedGarde] = useState<{ id: string; direction: "left" | "right" } | null>(null)
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; gardeId: string } | null>(null)
 
@@ -354,9 +355,22 @@ export default function AnimauxPage() {
             <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
             Calendrier
           </Button>
+          <Button
+            variant={viewMode === "stats" ? "default" : "ghost"}
+            onClick={() => setViewMode("stats")}
+            size="sm"
+            className={viewMode === "stats" 
+              ? "bg-gradient-to-r from-rose-400 to-pink-400 text-white border-0 shadow-md hover:from-rose-500 hover:to-pink-500 rounded-lg" 
+              : "text-slate-600 hover:bg-white/60 rounded-lg"}
+          >
+            <BarChart3 className="mr-1.5 h-3.5 w-3.5" />
+            Stats
+          </Button>
         </div>
 
-        {viewMode === "calendar" ? (
+        {viewMode === "stats" ? (
+          <StatsView gardes={gardes} />
+        ) : viewMode === "calendar" ? (
           <CalendarView gardes={gardes} />
         ) : (
           <Card className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-2xl overflow-hidden">
