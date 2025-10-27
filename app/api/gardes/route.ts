@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const jordanId = profiles.find(p => p.name === "jordan")?.id
     const julietteId = profiles.find(p => p.name === "juliette")?.id
 
-    let where: any
+    let where
 
     if (!showJordan && !showJuliette) {
       // Aucun filtre → uniquement les gardes communes
