@@ -72,16 +72,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Current month not found" }, { status: 404 })
     }
 
-    // Retourner les catégories avec monthId
-    return NextResponse.json({
-      monthId: currentMonthData.id,
-      categories: currentMonthData.categories.map((cat) => ({
-        id: cat.id,
-        name: cat.name,
-        icon: cat.icon,
-        color: cat.color,
-      })),
-    })
+    // Retourner uniquement icon + name
+    return NextResponse.json(
+      currentMonthData.categories.map((cat) => `${cat.icon} ${cat.name}`)
+    )
   } catch (error) {
     console.error("Error fetching categories:", error)
     return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 })
