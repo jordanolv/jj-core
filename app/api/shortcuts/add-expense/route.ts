@@ -14,9 +14,11 @@ export async function POST(request: NextRequest) {
 
     // Récupérer les données du body
     const body = await request.json()
+    console.log("Received body:", JSON.stringify(body, null, 2))
     const { categoryName, description, amount } = body
 
     if (!categoryName || !description || !amount) {
+      console.log("Missing fields - categoryName:", categoryName, "description:", description, "amount:", amount)
       return NextResponse.json(
         { error: "Missing required fields: categoryName, description, amount" },
         { status: 400 }
