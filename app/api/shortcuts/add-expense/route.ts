@@ -4,12 +4,21 @@ import { prisma } from "@/lib/db"
 // POST - Ajouter une dépense rapidement (pour raccourci iOS)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { categoryId, description, amount, profileId } = body
+    // Récupérer profileId de l'URL
+    const { searchParams } = new URL(request.url)
+    const profileId = searchParams.get("profileId")
 
-    if (!categoryId || !description || !amount || !profileId) {
+    if (!profileId) {
+      return NextResponse.json({ error: "profileId is required in URL" }, { status: 400 })
+    }
+
+    // Récupérer categoryId et amount du body
+    const body = await request.json()
+    const { categoryId, amount } = body
+
+    if (!categoryId || !amount) {
       return NextResponse.json(
-        { error: "Missing required fields: categoryId, description, amount, profileId" },
+        { error: "Missing required fields: categoryId, amount" },
         { status: 400 }
       )
     }
@@ -27,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Créer la dépense
     const expense = await prisma.budgetExpense.create({
       data: {
-        description,
+        description: category.name, // Utiliser le nom de la catégorie comme description
         amount: parseFloat(amount),
         date: new Date(),
         categoryId,
