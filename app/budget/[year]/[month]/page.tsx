@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, TrendingUp, TrendingDown, DollarSign, ChevronDown, ChevronUp, Edit2, Trash2, Check, X } from "lucide-react"
+import { Plus, TrendingUp, TrendingDown, Euro, ChevronDown, ChevronUp, Edit2, Trash2, Check, X, ShoppingCart } from "lucide-react"
 import Header from "@/components/header"
 
 interface BudgetIncome {
@@ -58,6 +58,13 @@ export default function BudgetMonthPage() {
   const [showExpenseForm, setShowExpenseForm] = useState<string | null>(null)
   const [newExpense, setNewExpense] = useState({ description: "", amount: "" })
   const [editingExpense, setEditingExpense] = useState<{ id: string; description: string; amount: string } | null>(null)
+
+  // États pour l'édition des revenus
+  const [editingIncome, setEditingIncome] = useState<{ id: string; description: string; amount: string } | null>(null)
+
+  // États pour les accordéons des sections principales
+  const [isRevenusOpen, setIsRevenusOpen] = useState(false)
+  const [isDepensesOpen, setIsDepensesOpen] = useState(false)
 
   const loadMonthData = useCallback(async (pid?: string) => {
     const id = pid || profileId
@@ -124,6 +131,7 @@ export default function BudgetMonthPage() {
       if (response.ok) {
         setNewIncome({ description: "", amount: "" })
         setShowIncomeForm(false)
+        setIsRevenusOpen(true) // Ouvrir la section après ajout
         loadMonthData(profileId)
       }
     } catch (error) {
@@ -155,6 +163,28 @@ export default function BudgetMonthPage() {
       }
     } catch (error) {
       console.error("Error adding category:", error)
+    }
+  }
+
+  const handleUpdateIncome = async () => {
+    if (!editingIncome) return
+
+    try {
+      const response = await fetch(`/api/budget/incomes/${editingIncome.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: editingIncome.description,
+          amount: parseFloat(editingIncome.amount),
+        }),
+      })
+
+      if (response.ok) {
+        setEditingIncome(null)
+        loadMonthData(profileId)
+      }
+    } catch (error) {
+      console.error("Error updating income:", error)
     }
   }
 
@@ -225,6 +255,7 @@ export default function BudgetMonthPage() {
       if (response.ok) {
         setNewExpense({ description: "", amount: "" })
         setShowExpenseForm(null)
+        setIsDepensesOpen(true) // Ouvrir la section après ajout
         loadCategoryExpenses(categoryId, true) // Force reload
         loadMonthData(profileId) // Recharger pour mettre à jour le total
       }
@@ -314,34 +345,52 @@ export default function BudgetMonthPage() {
                 <div className={`text-3xl font-bold ${solde >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
                   {solde.toFixed(2)} €
                 </div>
-                <p className="text-sm text-slate-500">
-                  Entrées: {totalIncome.toFixed(2)}€ - Dépenses: {totalExpenses.toFixed(2)}€
-                </p>
+                <div className="text-sm text-slate-500">
+                  <p>Revenus: {totalIncome.toFixed(2)}€</p>
+                  <p>Dépenses: {totalExpenses.toFixed(2)}€</p>
+                </div>
               </div>
             </div>
           </CardHeader>
         </Card>
 
-        {/* Entrées (Revenus) */}
+        {/* Revenus */}
         <Card className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-2xl overflow-hidden">
-          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-blue-50/30 to-indigo-50/30">
+          <CardHeader
+            className="border-b border-slate-100 bg-gradient-to-r from-blue-50/30 to-indigo-50/30 cursor-pointer hover:bg-blue-50/50 transition-colors"
+            onClick={() => setIsRevenusOpen(!isRevenusOpen)}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-blue-500" />
-                <CardTitle className="text-lg font-bold text-slate-800">Entrées</CardTitle>
-                <span className="text-sm text-slate-500">({totalIncome.toFixed(2)}€)</span>
+                <Euro className="h-5 w-5 text-blue-500" />
+                <div className="flex flex-col">
+                  <CardTitle className="text-lg font-bold text-slate-800">Revenus</CardTitle>
+                  <span className="text-sm text-slate-500">({totalIncome.toFixed(2)}€)</span>
+                </div>
               </div>
-              <Button
-                onClick={() => setShowIncomeForm(!showIncomeForm)}
-                size="sm"
-                className="bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-500 hover:to-indigo-500 text-white border-0 shadow-md"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Ajouter
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowIncomeForm(!showIncomeForm)
+                    setIsRevenusOpen(true)
+                  }}
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-500 hover:to-indigo-500 text-white border-0 shadow-md"
+                >
+                  <Plus className="h-4 w-4 mr-0.5" />
+                  Ajouter
+                </Button>
+                {isRevenusOpen ? (
+                  <ChevronUp className="h-5 w-5 text-slate-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
+                )}
+              </div>
             </div>
           </CardHeader>
-          <CardContent className="p-4">
+          {isRevenusOpen && (
+            <CardContent className="p-4">
             {showIncomeForm && (
               <form onSubmit={handleAddIncome} className="mb-4 p-4 bg-blue-50/50 rounded-xl space-y-3">
                 <input
@@ -383,50 +432,120 @@ export default function BudgetMonthPage() {
             ) : (
               <div className="space-y-2">
                 {incomes.map((income) => (
-                  <div
-                    key={income.id}
-                    className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <div>
-                      <p className="font-medium text-slate-800">{income.description}</p>
-                      <p className="text-xs text-slate-500">
-                        {new Date(income.date).toLocaleDateString("fr-FR")}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg font-bold text-blue-600">+{income.amount.toFixed(2)}€</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteIncome(income.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        ×
-                      </Button>
-                    </div>
+                  <div key={income.id}>
+                    {editingIncome?.id === income.id ? (
+                      // Mode édition
+                      <div className="p-3 bg-white rounded-lg border-2 border-blue-200 shadow-sm space-y-2">
+                        <input
+                          type="text"
+                          value={editingIncome.description}
+                          onChange={(e) => setEditingIncome({ ...editingIncome, description: e.target.value })}
+                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editingIncome.amount}
+                          onChange={(e) => setEditingIncome({ ...editingIncome, amount: e.target.value })}
+                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={handleUpdateIncome}
+                            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Valider
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingIncome(null)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Mode affichage
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div>
+                          <p className="font-medium text-slate-800">{income.description}</p>
+                          <p className="text-xs text-slate-500">
+                            {new Date(income.date).toLocaleDateString("fr-FR")}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold text-blue-600">+{income.amount.toFixed(2)}€</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingIncome({
+                              id: income.id,
+                              description: income.description,
+                              amount: income.amount.toString()
+                            })}
+                            className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteIncome(income.id)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             )}
-          </CardContent>
+            </CardContent>
+          )}
         </Card>
 
-        {/* Catégories de dépenses avec accordéon */}
+        {/* Dépenses */}
         <Card className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-2xl overflow-hidden">
-          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-rose-50/30 to-pink-50/30">
+          <CardHeader
+            className="border-b border-slate-100 bg-gradient-to-r from-rose-50/30 to-pink-50/30 cursor-pointer hover:bg-rose-50/50 transition-colors"
+            onClick={() => setIsDepensesOpen(!isDepensesOpen)}
+          >
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-bold text-slate-800">Catégories de dépenses</CardTitle>
-              <Button
-                onClick={() => setShowCategoryForm(!showCategoryForm)}
-                size="sm"
-                className="bg-gradient-to-r from-rose-400 to-pink-400 hover:from-rose-500 hover:to-pink-500 text-white border-0 shadow-md"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Ajouter
-              </Button>
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-rose-500" />
+                <div className="flex flex-col">
+                  <CardTitle className="text-lg font-bold text-slate-800">Dépenses</CardTitle>
+                  <span className="text-sm text-slate-500">({totalExpenses.toFixed(2)}€)</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowCategoryForm(!showCategoryForm)
+                    setIsDepensesOpen(true)
+                  }}
+                  size="sm"
+                  className="bg-gradient-to-r from-rose-400 to-pink-400 hover:from-rose-500 hover:to-pink-500 text-white border-0 shadow-md"
+                >
+                  <Plus className="h-4 w-4 mr-0.5" />
+                  Ajouter
+                </Button>
+                {isDepensesOpen ? (
+                  <ChevronUp className="h-5 w-5 text-slate-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
+                )}
+              </div>
             </div>
           </CardHeader>
-          <CardContent className="p-4">
+          {isDepensesOpen && (
+            <CardContent className="p-4">
             {showCategoryForm && (
               <form onSubmit={handleAddCategory} className="mb-4 p-4 bg-rose-50/50 rounded-xl space-y-3">
                 <input
@@ -656,7 +775,8 @@ export default function BudgetMonthPage() {
                 ))}
               </div>
             )}
-          </CardContent>
+            </CardContent>
+          )}
         </Card>
       </main>
     </div>
