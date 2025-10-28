@@ -4,10 +4,17 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, TrendingUp, TrendingDown, DollarSign } from "lucide-react"
+import { Plus, TrendingUp, TrendingDown, DollarSign, ChevronDown, ChevronUp, Edit2, Trash2, Check, X } from "lucide-react"
 import Header from "@/components/header"
 
 interface BudgetIncome {
+  id: string
+  description: string
+  amount: number
+  date: string
+}
+
+interface BudgetExpense {
   id: string
   description: string
   amount: number
@@ -40,11 +47,24 @@ export default function BudgetMonthPage() {
   const [showIncomeForm, setShowIncomeForm] = useState(false)
   const [showCategoryForm, setShowCategoryForm] = useState(false)
   const [newIncome, setNewIncome] = useState({ description: "", amount: "" })
-  const [newCategory, setNewCategory] = useState({ name: "", color: "#10b981" })
+  const [newCategory, setNewCategory] = useState({ name: "", color: "#10b981", icon: "📁" })
 
-  const loadMonthData = useCallback(async () => {
+  // États pour l'accordéon
+  const [openCategoryId, setOpenCategoryId] = useState<string | null>(null)
+  const [categoryExpenses, setCategoryExpenses] = useState<Record<string, BudgetExpense[]>>({})
+  const [loadingExpenses, setLoadingExpenses] = useState<Record<string, boolean>>({})
+
+  // États pour les dépenses
+  const [showExpenseForm, setShowExpenseForm] = useState<string | null>(null)
+  const [newExpense, setNewExpense] = useState({ description: "", amount: "" })
+  const [editingExpense, setEditingExpense] = useState<{ id: string; description: string; amount: string } | null>(null)
+
+  const loadMonthData = useCallback(async (pid?: string) => {
+    const id = pid || profileId
+    if (!id) return
+
     try {
-      const response = await fetch(`/api/budget/years/${year}/months/${month}`)
+      const response = await fetch(`/api/budget/years/${year}/months/${month}?profileId=${id}`)
       if (response.ok) {
         const data = await response.json()
         setMonthId(data.monthId)
@@ -56,7 +76,7 @@ export default function BudgetMonthPage() {
     } finally {
       setLoading(false)
     }
-  }, [year, month])
+  }, [year, month, profileId])
 
   useEffect(() => {
     const initializeProfile = async (profileName: string) => {
@@ -68,7 +88,7 @@ export default function BudgetMonthPage() {
 
         if (currentProfile) {
           setProfileId(currentProfile.id)
-          loadMonthData()
+          loadMonthData(currentProfile.id)
         }
       } catch (error) {
         console.error("Error initializing profile:", error)
@@ -104,7 +124,7 @@ export default function BudgetMonthPage() {
       if (response.ok) {
         setNewIncome({ description: "", amount: "" })
         setShowIncomeForm(false)
-        loadMonthData()
+        loadMonthData(profileId)
       }
     } catch (error) {
       console.error("Error adding income:", error)
@@ -116,20 +136,22 @@ export default function BudgetMonthPage() {
     if (!newCategory.name) return
 
     try {
+      // Créer la catégorie pour ce mois
       const response = await fetch(`/api/budget/categories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newCategory.name,
           color: newCategory.color,
+          icon: newCategory.icon,
           monthId,
         }),
       })
 
       if (response.ok) {
-        setNewCategory({ name: "", color: "#10b981" })
+        setNewCategory({ name: "", color: "#10b981", icon: "📁" })
         setShowCategoryForm(false)
-        loadMonthData()
+        loadMonthData(profileId)
       }
     } catch (error) {
       console.error("Error adding category:", error)
@@ -145,10 +167,111 @@ export default function BudgetMonthPage() {
       })
 
       if (response.ok) {
-        loadMonthData()
+        loadMonthData(profileId)
       }
     } catch (error) {
       console.error("Error deleting income:", error)
+    }
+  }
+
+  // Charger les dépenses d'une catégorie
+  const loadCategoryExpenses = async (categoryId: string, forceReload = false) => {
+    if (categoryExpenses[categoryId] && !forceReload) return // Déjà chargées
+
+    setLoadingExpenses(prev => ({ ...prev, [categoryId]: true }))
+    try {
+      const response = await fetch(`/api/budget/categories/${categoryId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setCategoryExpenses(prev => ({
+          ...prev,
+          [categoryId]: data.expenses
+        }))
+      }
+    } catch (error) {
+      console.error("Error loading expenses:", error)
+    } finally {
+      setLoadingExpenses(prev => ({ ...prev, [categoryId]: false }))
+    }
+  }
+
+  // Toggle accordéon
+  const handleToggleCategory = (categoryId: string) => {
+    if (openCategoryId === categoryId) {
+      setOpenCategoryId(null)
+    } else {
+      setOpenCategoryId(categoryId)
+      loadCategoryExpenses(categoryId)
+    }
+  }
+
+  // Ajouter une dépense
+  const handleAddExpense = async (categoryId: string) => {
+    if (!newExpense.description || !newExpense.amount) return
+
+    try {
+      const response = await fetch(`/api/budget/expenses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: newExpense.description,
+          amount: parseFloat(newExpense.amount),
+          categoryId,
+          profileId,
+          date: new Date().toISOString(),
+        }),
+      })
+
+      if (response.ok) {
+        setNewExpense({ description: "", amount: "" })
+        setShowExpenseForm(null)
+        loadCategoryExpenses(categoryId, true) // Force reload
+        loadMonthData(profileId) // Recharger pour mettre à jour le total
+      }
+    } catch (error) {
+      console.error("Error adding expense:", error)
+    }
+  }
+
+  // Éditer une dépense
+  const handleUpdateExpense = async (categoryId: string) => {
+    if (!editingExpense) return
+
+    try {
+      const response = await fetch(`/api/budget/expenses/${editingExpense.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: editingExpense.description,
+          amount: parseFloat(editingExpense.amount),
+        }),
+      })
+
+      if (response.ok) {
+        setEditingExpense(null)
+        loadCategoryExpenses(categoryId, true) // Force reload
+        loadMonthData(profileId)
+      }
+    } catch (error) {
+      console.error("Error updating expense:", error)
+    }
+  }
+
+  // Supprimer une dépense
+  const handleDeleteExpense = async (expenseId: string, categoryId: string) => {
+    if (!confirm("Supprimer cette dépense ?")) return
+
+    try {
+      const response = await fetch(`/api/budget/expenses/${expenseId}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        loadCategoryExpenses(categoryId, true) // Force reload
+        loadMonthData(profileId)
+      }
+    } catch (error) {
+      console.error("Error deleting expense:", error)
     }
   }
 
@@ -288,7 +411,7 @@ export default function BudgetMonthPage() {
           </CardContent>
         </Card>
 
-        {/* Catégories de dépenses */}
+        {/* Catégories de dépenses avec accordéon */}
         <Card className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-2xl overflow-hidden">
           <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-rose-50/30 to-pink-50/30">
             <div className="flex items-center justify-between">
@@ -314,6 +437,28 @@ export default function BudgetMonthPage() {
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-400"
                   required
                 />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">Icône (emoji)</label>
+                    <input
+                      type="text"
+                      placeholder="📁"
+                      value={newCategory.icon}
+                      onChange={(e) => setNewCategory({ ...newCategory, icon: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-400 text-center text-2xl"
+                      maxLength={2}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 mb-1">Couleur</label>
+                    <input
+                      type="color"
+                      value={newCategory.color}
+                      onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
+                      className="w-full h-10 rounded-lg border border-slate-200 cursor-pointer"
+                    />
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <Button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white">
                     Confirmer
@@ -323,7 +468,7 @@ export default function BudgetMonthPage() {
                     variant="outline"
                     onClick={() => {
                       setShowCategoryForm(false)
-                      setNewCategory({ name: "", color: "#10b981" })
+                      setNewCategory({ name: "", color: "#10b981", icon: "📁" })
                     }}
                   >
                     Annuler
@@ -336,24 +481,177 @@ export default function BudgetMonthPage() {
             ) : (
               <div className="space-y-2">
                 {categories.map((category) => (
-                  <div
-                    key={category.id}
-                    className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
-                    onClick={() => router.push(`/budget/${year}/${month}/${category.id}`)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-sm"
-                        style={{ backgroundColor: category.color || "#10b981" }}
-                      >
-                        {category.name.charAt(0)}
+                  <div key={category.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                    {/* En-tête de la catégorie */}
+                    <div
+                      className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                      onClick={() => handleToggleCategory(category.id)}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-sm text-xl"
+                          style={{ backgroundColor: category.color || "#10b981" }}
+                        >
+                          {category.icon || category.name.charAt(0)}
+                        </div>
+                        <p className="font-medium text-slate-800">{category.name}</p>
                       </div>
-                      <p className="font-medium text-slate-800">{category.name}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-slate-800">{category.total.toFixed(2)}€</span>
+                        {openCategoryId === category.id ? (
+                          <ChevronUp className="h-5 w-5 text-slate-400" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-slate-400" />
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-slate-800">{category.total.toFixed(2)}€</span>
-                      <span className="text-slate-400">→</span>
-                    </div>
+
+                    {/* Contenu accordéon - Liste des dépenses */}
+                    {openCategoryId === category.id && (
+                      <div className="border-t border-slate-100 p-3 bg-slate-50/50 space-y-2">
+                        {loadingExpenses[category.id] ? (
+                          <div className="text-center py-4">
+                            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-rose-400"></div>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Bouton ajouter une dépense */}
+                            {showExpenseForm !== category.id && (
+                              <Button
+                                onClick={() => setShowExpenseForm(category.id)}
+                                size="sm"
+                                variant="outline"
+                                className="w-full border-dashed"
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Ajouter une dépense
+                              </Button>
+                            )}
+
+                            {/* Formulaire d'ajout */}
+                            {showExpenseForm === category.id && (
+                              <div className="p-3 bg-white rounded-lg border-2 border-rose-200 space-y-2">
+                                <input
+                                  type="text"
+                                  placeholder="Description"
+                                  value={newExpense.description}
+                                  onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
+                                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                                />
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="Montant"
+                                  value={newExpense.amount}
+                                  onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+                                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                                />
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleAddExpense(category.id)}
+                                    className="flex-1 bg-rose-500 hover:bg-rose-600 text-white"
+                                  >
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Valider
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setShowExpenseForm(null)
+                                      setNewExpense({ description: "", amount: "" })
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Liste des dépenses */}
+                            {categoryExpenses[category.id]?.length === 0 ? (
+                              <p className="text-center py-4 text-sm text-slate-500">Aucune dépense</p>
+                            ) : (
+                              <div className="space-y-2">
+                                {categoryExpenses[category.id]?.map((expense) => (
+                                  <div key={expense.id}>
+                                    {editingExpense?.id === expense.id ? (
+                                      // Mode édition
+                                      <div className="p-3 bg-white rounded-lg border-2 border-blue-200 space-y-2">
+                                        <input
+                                          type="text"
+                                          value={editingExpense.description}
+                                          onChange={(e) => setEditingExpense({ ...editingExpense, description: e.target.value })}
+                                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                        />
+                                        <input
+                                          type="number"
+                                          step="0.01"
+                                          value={editingExpense.amount}
+                                          onChange={(e) => setEditingExpense({ ...editingExpense, amount: e.target.value })}
+                                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                        />
+                                        <div className="flex gap-2">
+                                          <Button
+                                            size="sm"
+                                            onClick={() => handleUpdateExpense(category.id)}
+                                            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                                          >
+                                            <Check className="h-4 w-4 mr-1" />
+                                            Valider
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setEditingExpense(null)}
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      // Mode affichage
+                                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                                        <div className="flex-1">
+                                          <p className="text-sm font-medium text-slate-800">{expense.description}</p>
+                                          <p className="text-xs text-slate-500">
+                                            {new Date(expense.date).toLocaleDateString("fr-FR")}
+                                          </p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-base font-bold text-slate-800">{expense.amount.toFixed(2)}€</span>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setEditingExpense({
+                                              id: expense.id,
+                                              description: expense.description,
+                                              amount: expense.amount.toString()
+                                            })}
+                                            className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1"
+                                          >
+                                            <Edit2 className="h-4 w-4" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDeleteExpense(expense.id, category.id)}
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

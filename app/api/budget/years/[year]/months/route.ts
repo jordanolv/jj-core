@@ -3,15 +3,27 @@ import { prisma } from "@/lib/db"
 
 // GET - Récupérer tous les mois d'une année avec leur solde
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ year: string }> }
 ) {
   try {
     const { year: yearParam } = await context.params
     const year = parseInt(yearParam)
 
+    const { searchParams } = new URL(request.url)
+    const profileId = searchParams.get("profileId")
+
+    if (!profileId) {
+      return NextResponse.json({ error: "profileId is required" }, { status: 400 })
+    }
+
     const budgetYear = await prisma.budgetYear.findUnique({
-      where: { year },
+      where: {
+        year_profileId: {
+          year,
+          profileId,
+        },
+      },
       include: {
         months: {
           include: {
@@ -77,10 +89,31 @@ export async function POST(
       return NextResponse.json(existing)
     }
 
+    // Récupérer l'année pour avoir le profileId
+    const budgetYear = await prisma.budgetYear.findUnique({
+      where: { id: yearId },
+    })
+
+    if (!budgetYear) {
+      return NextResponse.json({ error: "Year not found" }, { status: 404 })
+    }
+
+    // Récupérer les catégories par défaut du profil
+    const defaultCategories = await prisma.defaultBudgetCategory.findMany({
+      where: { profileId: budgetYear.profileId },
+    })
+
     const budgetMonth = await prisma.budgetMonth.create({
       data: {
         month,
         yearId,
+        categories: {
+          create: defaultCategories.map((cat) => ({
+            name: cat.name,
+            color: cat.color,
+            icon: cat.icon,
+          })),
+        },
       },
     })
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,23 @@ export default function BudgetPage() {
   const [years, setYears] = useState<BudgetYear[]>([])
   const [loading, setLoading] = useState(true)
 
+  const loadYears = useCallback(async (pid?: string) => {
+    const id = pid || profileId
+    if (!id) return
+
+    try {
+      const response = await fetch(`/api/budget/years?profileId=${id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setYears(data)
+      }
+    } catch (error) {
+      console.error("Error loading years:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [profileId])
+
   useEffect(() => {
     const initializeProfile = async (profileName: string) => {
       try {
@@ -29,7 +46,7 @@ export default function BudgetPage() {
 
         if (currentProfile) {
           setProfileId(currentProfile.id)
-          loadYears()
+          loadYears(currentProfile.id)
         }
       } catch (error) {
         console.error("Error initializing profile:", error)
@@ -43,21 +60,7 @@ export default function BudgetPage() {
     } else {
       initializeProfile(currentProfile)
     }
-  }, [router])
-
-  const loadYears = async () => {
-    try {
-      const response = await fetch("/api/budget/years")
-      if (response.ok) {
-        const data = await response.json()
-        setYears(data)
-      }
-    } catch (error) {
-      console.error("Error loading years:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [router, loadYears])
 
   const handleCreateYear = async () => {
     const currentYear = new Date().getFullYear()

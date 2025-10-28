@@ -1,0 +1,29 @@
+{
+  "categories": [
+    {
+      "name": "Alimentation",
+      "color": "#10b981",
+      "icon": "🍔"
+    },
+    {
+      "name": "Santé",
+      "color": "#ef4444",
+      "icon": "💊"
+    },
+    {
+      "name": "Loisir",
+      "color": "#a855f7",
+      "icon": "🎮"
+    },
+    {
+      "name": "Achats",
+      "color": "#f59e0b",
+      "icon": "🛍️"
+    },
+    {
+      "name": "Factures/Loyer",
+      "color": "#3b82f6",
+      "icon": "🏠"
+    }
+  ]
+}

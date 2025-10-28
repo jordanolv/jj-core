@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { LogOut, UserCircle, ArrowLeft } from "lucide-react"
+import { LogOut, UserCircle, ArrowLeft, Settings } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,6 +79,11 @@ export default function Header({ profile, title, description, showBack, backHref
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 bg-white backdrop-blur-sm border border-slate-200 shadow-lg">
               <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4" />
+                Paramètres
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleChangeProfile} className="cursor-pointer">
                 <UserCircle className="mr-2 h-4 w-4" />

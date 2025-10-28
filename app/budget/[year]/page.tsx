@@ -26,9 +26,12 @@ export default function BudgetYearPage() {
   const [yearId, setYearId] = useState<string>("")
   const [loading, setLoading] = useState(true)
 
-  const loadMonths = useCallback(async () => {
+  const loadMonths = useCallback(async (pid?: string) => {
+    const id = pid || profileId
+    if (!id) return
+
     try {
-      const response = await fetch(`/api/budget/years/${year}/months`)
+      const response = await fetch(`/api/budget/years/${year}/months?profileId=${id}`)
       if (response.ok) {
         const data = await response.json()
         setMonths(data.months)
@@ -39,7 +42,7 @@ export default function BudgetYearPage() {
     } finally {
       setLoading(false)
     }
-  }, [year])
+  }, [year, profileId])
 
   useEffect(() => {
     const initializeProfile = async (profileName: string) => {
@@ -51,7 +54,7 @@ export default function BudgetYearPage() {
 
         if (currentProfile) {
           setProfileId(currentProfile.id)
-          loadMonths()
+          loadMonths(currentProfile.id)
         }
       } catch (error) {
         console.error("Error initializing profile:", error)

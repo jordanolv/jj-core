@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
+import defaultCategories from "@/data/default-categories.json"
 
 // GET - Récupérer les données d'un mois spécifique
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ year: string; month: string }> }
 ) {
   try {
@@ -11,9 +12,21 @@ export async function GET(
     const year = parseInt(params.year)
     const month = parseInt(params.month)
 
-    // Trouver l'année
+    const { searchParams } = new URL(request.url)
+    const profileId = searchParams.get("profileId")
+
+    if (!profileId) {
+      return NextResponse.json({ error: "profileId is required" }, { status: 400 })
+    }
+
+    // Trouver l'année pour ce profil
     const budgetYear = await prisma.budgetYear.findUnique({
-      where: { year },
+      where: {
+        year_profileId: {
+          year,
+          profileId,
+        },
+      },
     })
 
     if (!budgetYear) {
@@ -43,12 +56,19 @@ export async function GET(
       },
     })
 
-    // Si le mois n'existe pas, le créer
+    // Si le mois n'existe pas, le créer avec les catégories par défaut
     if (!budgetMonth) {
       budgetMonth = await prisma.budgetMonth.create({
         data: {
           month,
           yearId: budgetYear.id,
+          categories: {
+            create: defaultCategories.categories.map((cat) => ({
+              name: cat.name,
+              color: cat.color,
+              icon: cat.icon,
+            })),
+          },
         },
         include: {
           incomes: true,

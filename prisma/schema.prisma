@@ -102,12 +102,13 @@ model GardeAnimaux {
 // Section Budget - Années
 model BudgetYear {
   id        String        @id @default(cuid())
-  year      Int           @unique // 2025, 2026, etc.
+  year      Int           // 2025, 2026, etc.
   profileId String
   months    BudgetMonth[]
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
+  @@unique([year, profileId]) // Une année par profil
   @@index([year])
   @@index([profileId])
 }
@@ -181,4 +182,18 @@ model BudgetExpense {
   @@index([monthId])
   @@index([profileId])
   @@index([date])
+}
+
+// Catégories par défaut (template pour nouvelles années)
+model DefaultBudgetCategory {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#10b981")
+  icon      String?
+  profileId String   // Chaque profil a ses propres catégories par défaut
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, profileId]) // Pas de doublons par profil
+  @@index([profileId])
 }
