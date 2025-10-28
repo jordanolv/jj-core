@@ -46,6 +46,7 @@ export default function BudgetSettingsPage() {
     } else {
       initializeProfile(currentProfile)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
   const loadCategories = async (pid?: string) => {

@@ -15,12 +15,19 @@ export async function GET(request: NextRequest) {
     const currentYear = now.getFullYear()
     const currentMonth = now.getMonth() + 1 // 1-12
 
-    // Trouver ou créer l'année
+    // Trouver ou créer l'année avec les mois inclus
     let budgetYear = await prisma.budgetYear.findUnique({
       where: {
         year_profileId: {
           year: currentYear,
           profileId,
+        },
+      },
+      include: {
+        months: {
+          include: {
+            categories: true,
+          },
         },
       },
     })
@@ -56,22 +63,10 @@ export async function GET(request: NextRequest) {
           },
         },
       })
-    } else {
-      // Charger les mois si l'année existe déjà
-      budgetYear = await prisma.budgetYear.findUnique({
-        where: { id: budgetYear.id },
-        include: {
-          months: {
-            include: {
-              categories: true,
-            },
-          },
-        },
-      })
     }
 
     // Trouver le mois actuel
-    const currentMonthData = budgetYear?.months.find((m) => m.month === currentMonth)
+    const currentMonthData = budgetYear.months.find((m) => m.month === currentMonth)
 
     if (!currentMonthData) {
       return NextResponse.json({ error: "Current month not found" }, { status: 404 })
