@@ -131,7 +131,7 @@ export default function BudgetYearPage() {
                 <CardHeader className="relative p-4">
                   <div className="flex items-center justify-between mb-2">
                     <Calendar className="h-5 w-5 text-emerald-500" />
-                    {monthData && (
+                    {monthData && solde !== 0 && (
                       <div className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                         solde >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
                       }`}>
