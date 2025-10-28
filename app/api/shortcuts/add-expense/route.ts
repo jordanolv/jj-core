@@ -12,35 +12,61 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "profileId is required in URL" }, { status: 400 })
     }
 
-    // Récupérer categoryId et amount du body
+    // Récupérer les données du body
     const body = await request.json()
-    const { categoryId, amount } = body
+    const { categoryName, description, amount } = body
 
-    if (!categoryId || !amount) {
+    if (!categoryName || !description || !amount) {
       return NextResponse.json(
-        { error: "Missing required fields: categoryId, amount" },
+        { error: "Missing required fields: categoryName, description, amount" },
         { status: 400 }
       )
     }
 
-    // Récupérer la catégorie pour avoir le monthId
-    const category = await prisma.budgetCategory.findUnique({
-      where: { id: categoryId },
-      include: { month: true },
+    // Récupérer l'année et le mois actuel
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1
+
+    // Trouver le mois actuel dans la base de données
+    const budgetYear = await prisma.budgetYear.findUnique({
+      where: {
+        year_profileId: {
+          year: currentYear,
+          profileId,
+        },
+      },
+      include: {
+        months: {
+          where: { month: currentMonth },
+          include: {
+            categories: true,
+          },
+        },
+      },
     })
 
+    if (!budgetYear || budgetYear.months.length === 0) {
+      return NextResponse.json({ error: "Current month not found" }, { status: 404 })
+    }
+
+    const currentMonthData = budgetYear.months[0]
+
+    // Trouver la catégorie par son nom (icon + name)
+    const category = currentMonthData.categories.find((cat) => `${cat.icon} ${cat.name}` === categoryName)
+
     if (!category) {
-      return NextResponse.json({ error: "Category not found" }, { status: 404 })
+      return NextResponse.json({ error: "Category not found in current month" }, { status: 404 })
     }
 
     // Créer la dépense
     const expense = await prisma.budgetExpense.create({
       data: {
-        description: category.name, // Utiliser le nom de la catégorie comme description
+        description,
         amount: parseFloat(amount),
         date: new Date(),
-        categoryId,
-        monthId: category.monthId,
+        categoryId: category.id,
+        monthId: currentMonthData.id,
         profileId,
         isShared: false,
       },
