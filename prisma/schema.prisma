@@ -98,3 +98,87 @@ model GardeAnimaux {
   @@index([profileId])
   @@index([dateDebut])
 }
+
+// Section Budget - Années
+model BudgetYear {
+  id        String        @id @default(cuid())
+  year      Int           @unique // 2025, 2026, etc.
+  profileId String
+  months    BudgetMonth[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([year])
+  @@index([profileId])
+}
+
+// Section Budget - Mois
+model BudgetMonth {
+  id         String            @id @default(cuid())
+  month      Int // 1-12 (Janvier = 1, Décembre = 12)
+  yearId     String
+  year       BudgetYear        @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  incomes    BudgetIncome[]
+  expenses   BudgetExpense[]
+  categories BudgetCategory[]
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([yearId, month])
+  @@index([yearId])
+  @@index([month])
+}
+
+// Section Budget - Catégories de dépenses
+model BudgetCategory {
+  id        String          @id @default(cuid())
+  name      String // "Alimentation", "Santé", etc.
+  color     String? // Couleur pour l'UI
+  icon      String? // Icône pour l'UI
+  monthId   String
+  month     BudgetMonth     @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  expenses  BudgetExpense[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([monthId])
+}
+
+// Section Budget - Revenus (Entrées)
+model BudgetIncome {
+  id          String      @id @default(cuid())
+  description String // "Salaire", "CAF", etc.
+  amount      Float
+  date        DateTime
+  monthId     String
+  month       BudgetMonth @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  profileId   String // Qui a créé cette entrée
+  isShared    Boolean     @default(false) // true = revenu commun
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([monthId])
+  @@index([profileId])
+  @@index([date])
+}
+
+// Section Budget - Dépenses
+model BudgetExpense {
+  id          String         @id @default(cuid())
+  description String
+  amount      Float
+  date        DateTime
+  categoryId  String
+  category    BudgetCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  monthId     String
+  month       BudgetMonth    @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  profileId   String // Qui a créé cette dépense
+  isShared    Boolean        @default(false) // true = dépense commune
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([categoryId])
+  @@index([monthId])
+  @@index([profileId])
+  @@index([date])
+}
