@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 
 // GET - Récupérer une catégorie avec ses dépenses
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: Request,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
     const category = await prisma.budgetCategory.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         expenses: {
           orderBy: { date: "desc" },

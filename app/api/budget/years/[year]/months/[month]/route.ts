@@ -1,12 +1,13 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 
 // GET - Récupérer les données d'un mois spécifique
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { year: string; month: string } }
+  _request: Request,
+  context: { params: Promise<{ year: string; month: string }> }
 ) {
   try {
+    const params = await context.params
     const year = parseInt(params.year)
     const month = parseInt(params.month)
 
@@ -66,7 +67,7 @@ export async function GET(
       name: category.name,
       color: category.color,
       icon: category.icon,
-      total: category.expenses.reduce((sum, expense) => sum + expense.amount, 0),
+      total: category.expenses.reduce((sum: number, expense: { amount: number }) => sum + expense.amount, 0),
     }))
 
     return NextResponse.json({

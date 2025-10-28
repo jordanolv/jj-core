@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -38,6 +38,21 @@ export default function CategoryDetailPage() {
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [newExpense, setNewExpense] = useState({ description: "", amount: "" })
 
+  const loadCategoryData = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/budget/categories/${categoryId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setCategory(data.category)
+        setExpenses(data.expenses)
+      }
+    } catch (error) {
+      console.error("Error loading category data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [categoryId])
+
   useEffect(() => {
     const initializeProfile = async (profileName: string) => {
       try {
@@ -62,22 +77,7 @@ export default function CategoryDetailPage() {
     } else {
       initializeProfile(currentProfile)
     }
-  }, [router])
-
-  const loadCategoryData = async () => {
-    try {
-      const response = await fetch(`/api/budget/categories/${categoryId}`)
-      if (response.ok) {
-        const data = await response.json()
-        setCategory(data.category)
-        setExpenses(data.expenses)
-      }
-    } catch (error) {
-      console.error("Error loading category data:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [router, loadCategoryData])
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault()

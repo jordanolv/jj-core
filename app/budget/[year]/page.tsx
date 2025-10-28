@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar } from "lucide-react"
 import Header from "@/components/header"
 
@@ -25,6 +25,21 @@ export default function BudgetYearPage() {
   const [months, setMonths] = useState<BudgetMonth[]>([])
   const [yearId, setYearId] = useState<string>("")
   const [loading, setLoading] = useState(true)
+
+  const loadMonths = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/budget/years/${year}/months`)
+      if (response.ok) {
+        const data = await response.json()
+        setMonths(data.months)
+        setYearId(data.yearId)
+      }
+    } catch (error) {
+      console.error("Error loading months:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [year])
 
   useEffect(() => {
     const initializeProfile = async (profileName: string) => {
@@ -50,22 +65,7 @@ export default function BudgetYearPage() {
     } else {
       initializeProfile(currentProfile)
     }
-  }, [router])
-
-  const loadMonths = async () => {
-    try {
-      const response = await fetch(`/api/budget/years/${year}/months`)
-      if (response.ok) {
-        const data = await response.json()
-        setMonths(data.months)
-        setYearId(data.yearId)
-      }
-    } catch (error) {
-      console.error("Error loading months:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [router, loadMonths])
 
   const handleMonthClick = async (monthNumber: number) => {
     // Créer le mois s'il n'existe pas
@@ -80,7 +80,6 @@ export default function BudgetYearPage() {
         })
 
         if (response.ok) {
-          const newMonth = await response.json()
           router.push(`/budget/${year}/${monthNumber}`)
         }
       } catch (error) {

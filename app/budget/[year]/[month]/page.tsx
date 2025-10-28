@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -42,6 +42,22 @@ export default function BudgetMonthPage() {
   const [newIncome, setNewIncome] = useState({ description: "", amount: "" })
   const [newCategory, setNewCategory] = useState({ name: "", color: "#10b981" })
 
+  const loadMonthData = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/budget/years/${year}/months/${month}`)
+      if (response.ok) {
+        const data = await response.json()
+        setMonthId(data.monthId)
+        setIncomes(data.incomes)
+        setCategories(data.categories)
+      }
+    } catch (error) {
+      console.error("Error loading month data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [year, month])
+
   useEffect(() => {
     const initializeProfile = async (profileName: string) => {
       try {
@@ -66,23 +82,7 @@ export default function BudgetMonthPage() {
     } else {
       initializeProfile(currentProfile)
     }
-  }, [router])
-
-  const loadMonthData = async () => {
-    try {
-      const response = await fetch(`/api/budget/years/${year}/months/${month}`)
-      if (response.ok) {
-        const data = await response.json()
-        setMonthId(data.monthId)
-        setIncomes(data.incomes)
-        setCategories(data.categories)
-      }
-    } catch (error) {
-      console.error("Error loading month data:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [router, loadMonthData])
 
   const handleAddIncome = async (e: React.FormEvent) => {
     e.preventDefault()

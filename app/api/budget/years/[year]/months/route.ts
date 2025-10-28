@@ -1,13 +1,14 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 
 // GET - Récupérer tous les mois d'une année avec leur solde
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { year: string } }
+  _request: Request,
+  context: { params: Promise<{ year: string }> }
 ) {
   try {
-    const year = parseInt(params.year)
+    const { year: yearParam } = await context.params
+    const year = parseInt(yearParam)
 
     const budgetYear = await prisma.budgetYear.findUnique({
       where: { year },
@@ -27,8 +28,8 @@ export async function GET(
 
     // Calculer le solde pour chaque mois
     const monthsWithSolde = budgetYear.months.map((month) => {
-      const totalIncome = month.incomes.reduce((sum, income) => sum + income.amount, 0)
-      const totalExpenses = month.expenses.reduce((sum, expense) => sum + expense.amount, 0)
+      const totalIncome = month.incomes.reduce((sum: number, income: { amount: number }) => sum + income.amount, 0)
+      const totalExpenses = month.expenses.reduce((sum: number, expense: { amount: number }) => sum + expense.amount, 0)
 
       return {
         id: month.id,
@@ -49,8 +50,7 @@ export async function GET(
 
 // POST - Créer un nouveau mois
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { year: string } }
+  request: Request
 ) {
   try {
     const body = await request.json()
