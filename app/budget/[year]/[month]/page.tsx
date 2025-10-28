@@ -358,7 +358,12 @@ export default function BudgetMonthPage() {
         <Card className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-2xl overflow-hidden">
           <CardHeader
             className="border-b border-slate-100 bg-gradient-to-r from-blue-50/30 to-indigo-50/30 cursor-pointer hover:bg-blue-50/50 transition-colors"
-            onClick={() => setIsRevenusOpen(!isRevenusOpen)}
+            onClick={() => {
+              setIsRevenusOpen(!isRevenusOpen)
+              if (isRevenusOpen) {
+                setShowIncomeForm(false) // Fermer le formulaire si on ferme la section
+              }
+            }}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -513,7 +518,12 @@ export default function BudgetMonthPage() {
         <Card className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-2xl overflow-hidden">
           <CardHeader
             className="border-b border-slate-100 bg-gradient-to-r from-rose-50/30 to-pink-50/30 cursor-pointer hover:bg-rose-50/50 transition-colors"
-            onClick={() => setIsDepensesOpen(!isDepensesOpen)}
+            onClick={() => {
+              setIsDepensesOpen(!isDepensesOpen)
+              if (isDepensesOpen) {
+                setShowCategoryForm(false) // Fermer le formulaire si on ferme la section
+              }
+            }}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
