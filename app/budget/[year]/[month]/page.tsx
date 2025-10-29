@@ -66,9 +66,16 @@ export default function BudgetMonthPage() {
   const [isRevenusOpen, setIsRevenusOpen] = useState(false)
   const [isDepensesOpen, setIsDepensesOpen] = useState(false)
 
-  const loadMonthData = useCallback(async (pid?: string) => {
+  // État pour le pull-to-refresh
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const loadMonthData = useCallback(async (pid?: string, isRefresh = false) => {
     const id = pid || profileId
     if (!id) return
+
+    if (isRefresh) {
+      setIsRefreshing(true)
+    }
 
     try {
       const response = await fetch(`/api/budget/years/${year}/months/${month}?profileId=${id}`)
@@ -77,13 +84,21 @@ export default function BudgetMonthPage() {
         setMonthId(data.monthId)
         setIncomes(data.incomes)
         setCategories(data.categories)
+
+        // Recharger les dépenses des catégories ouvertes
+        if (isRefresh && openCategoryId) {
+          await loadCategoryExpenses(openCategoryId, true)
+        }
       }
     } catch (error) {
       console.error("Error loading month data:", error)
     } finally {
       setLoading(false)
+      if (isRefresh) {
+        setIsRefreshing(false)
+      }
     }
-  }, [year, month, profileId])
+  }, [year, month, profileId, openCategoryId])
 
   useEffect(() => {
     const initializeProfile = async (profileName: string) => {
@@ -110,6 +125,44 @@ export default function BudgetMonthPage() {
       initializeProfile(currentProfile)
     }
   }, [router, loadMonthData])
+
+  // Gestion du pull-to-refresh
+  const handleRefresh = () => {
+    if (!isRefreshing) {
+      loadMonthData(profileId, true)
+    }
+  }
+
+  // Détecter le geste de pull-to-refresh
+  useEffect(() => {
+    let startY = 0
+    let isAtTop = false
+
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].pageY
+      isAtTop = window.scrollY === 0
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isAtTop || isRefreshing) return
+
+      const currentY = e.touches[0].pageY
+      const diff = currentY - startY
+
+      // Si l'utilisateur tire vers le bas de plus de 100px
+      if (diff > 100) {
+        handleRefresh()
+      }
+    }
+
+    document.addEventListener('touchstart', handleTouchStart)
+    document.addEventListener('touchmove', handleTouchMove)
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchmove', handleTouchMove)
+    }
+  }, [isRefreshing, profileId])
 
   const handleAddIncome = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -332,6 +385,16 @@ export default function BudgetMonthPage() {
       />
 
       <main className="container mx-auto px-4 py-8 relative z-10 space-y-6">
+        {/* Indicateur de refresh */}
+        {isRefreshing && (
+          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
+            <div className="flex items-center gap-2">
+              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              <span className="text-sm text-slate-700">Actualisation...</span>
+            </div>
+          </div>
+        )}
+
         {/* Solde */}
         <Card className="relative bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-2xl overflow-hidden">
           <div className={`absolute inset-0 bg-gradient-to-br ${solde >= 0 ? 'from-emerald-400/10 to-teal-400/10' : 'from-red-400/10 to-rose-400/10'} opacity-50`}></div>
