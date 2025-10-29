@@ -61,11 +61,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Category not found in current month" }, { status: 404 })
     }
 
-    // Créer la dépense
+    const parsedAmount = parseFloat(amount.toString().replace(',', '.'))
+
     const expense = await prisma.budgetExpense.create({
       data: {
         description,
-        amount: parseFloat(amount),
+        amount: parsedAmount,
         date: new Date(),
         categoryId: category.id,
         monthId: currentMonthData.id,
