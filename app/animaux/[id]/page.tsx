@@ -211,7 +211,7 @@ export default function GardeDetailPage() {
                   <Cat className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
                 )}
                 <div>
-                  <p className="text-xs text-slate-500">Type d'animal</p>
+                  <p className="text-xs text-slate-500">Type d&apos;animal</p>
                   <p className="text-sm font-medium text-slate-800">{garde.typeAnimal}</p>
                 </div>
               </div>
