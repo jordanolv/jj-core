@@ -98,6 +98,7 @@ export default function BudgetMonthPage() {
         setIsRefreshing(false)
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year, month, profileId, openCategoryId])
 
   useEffect(() => {
@@ -162,6 +163,7 @@ export default function BudgetMonthPage() {
       document.removeEventListener('touchstart', handleTouchStart)
       document.removeEventListener('touchmove', handleTouchMove)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRefreshing, profileId])
 
   const handleAddIncome = async (e: React.FormEvent) => {
