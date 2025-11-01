@@ -88,6 +88,7 @@ export function MobileGardeForm({ profileId, garde, onCancel, onSuccess }: Mobil
       Array.from(files).forEach(file => {
         formData.append("files", file)
       })
+      formData.append("type", "pets") // Spécifier le type pour les photos d'animaux
 
       const response = await fetch("/api/upload", {
         method: "POST",

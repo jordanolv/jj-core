@@ -7,6 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const files = formData.getAll("files") as File[]
+    const type = formData.get("type") as string || "pets" // Par défaut: pets
 
     if (!files || files.length === 0) {
       return NextResponse.json(
@@ -15,8 +16,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Créer le dossier uploads s'il n'existe pas
-    const uploadDir = join(process.cwd(), "public", "uploads")
+    // Valider le type
+    const validTypes = ["pets", "recipes"]
+    if (!validTypes.includes(type)) {
+      return NextResponse.json(
+        { error: "Type invalide. Utilisez 'pets' ou 'recipes'" },
+        { status: 400 }
+      )
+    }
+
+    // Créer le dossier uploads/{type} s'il n'existe pas
+    const uploadDir = join(process.cwd(), "public", "uploads", type)
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true })
     }
@@ -37,7 +47,7 @@ export async function POST(request: NextRequest) {
       await writeFile(filepath, buffer)
 
       // Retourner l'URL relative
-      uploadedUrls.push(`/uploads/${filename}`)
+      uploadedUrls.push(`/uploads/${type}/${filename}`)
     }
 
     return NextResponse.json({ urls: uploadedUrls })

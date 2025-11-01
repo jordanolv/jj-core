@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Calendar, DollarSign, PawPrint, CalendarDays, List, Trash2, Dog, Cat, BarChart3, Edit2 } from "lucide-react"
+import { Plus, Calendar, DollarSign, PawPrint, CalendarDays, List, Trash2, Dog, Cat, BarChart3, Edit2, Eye, MoreVertical } from "lucide-react"
 import { MobileGardeForm } from "./mobile-garde-form"
 import { CalendarView } from "./calendar-view"
 import { StatsView } from "./stats-view"
@@ -45,8 +45,6 @@ export default function AnimauxPage() {
   const [filterCommune, setFilterCommune] = useState<boolean>(false)
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<"list" | "calendar" | "stats">("list")
-  const [swipedGarde, setSwipedGarde] = useState<{ id: string; direction: "left" | "right" } | null>(null)
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number; gardeId: string } | null>(null)
 
   const loadGardes = async (showJordan: boolean, showJuliette: boolean, showCommune: boolean) => {
     try {
@@ -157,17 +155,12 @@ export default function AnimauxPage() {
   }
 
   const handleDeleteGarde = async (gardeId: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cette garde ?")) {
-      return
-    }
-
     try {
       const response = await fetch(`/api/gardes/${gardeId}`, {
         method: "DELETE",
       })
 
       if (response.ok) {
-        setSwipedGarde(null)
         loadGardes(filterJordan, filterJuliette, filterCommune)
       } else {
         alert("Erreur lors de la suppression")
@@ -421,97 +414,10 @@ export default function AnimauxPage() {
                     }
 
                     const currentStatut = statutStyles[garde.statut] || statutStyles.confirmé
-                    const isSwipedLeft = swipedGarde?.id === garde.id && swipedGarde?.direction === "left"
-                    const isSwipedRight = swipedGarde?.id === garde.id && swipedGarde?.direction === "right"
-
-                    const handleTouchStart = (e: React.TouchEvent) => {
-                      setTouchStart({ 
-                        x: e.touches[0].clientX,
-                        y: e.touches[0].clientY,
-                        gardeId: garde.id 
-                      })
-                    }
-
-                    const handleTouchMove = (e: React.TouchEvent) => {
-                      if (!touchStart || touchStart.gardeId !== garde.id) return
-                      
-                      const touchCurrentX = e.touches[0].clientX
-                      const touchCurrentY = e.touches[0].clientY
-                      const diffX = Math.abs(touchCurrentX - touchStart.x)
-                      const diffY = Math.abs(touchCurrentY - touchStart.y)
-                      
-                      // Si le mouvement est plus horizontal que vertical, empêcher le scroll/navigation
-                      if (diffX > diffY && diffX > 10) {
-                        e.preventDefault()
-                      }
-                    }
-
-                    const handleTouchEnd = (e: React.TouchEvent) => {
-                      if (!touchStart || touchStart.gardeId !== garde.id) return
-                      
-                      const touchEndX = e.changedTouches[0].clientX
-                      const swipeDistance = touchStart.x - touchEndX
-                      
-                      // Si la carte est déjà swipée, un tap la ferme
-                      if ((isSwipedLeft || isSwipedRight) && Math.abs(swipeDistance) < 10) {
-                        setSwipedGarde(null)
-                      }
-                      // Sinon, détection du swipe
-                      else if (swipeDistance > 50) {
-                        // Swipe vers la gauche → DELETE
-                        setSwipedGarde({ id: garde.id, direction: "left" })
-                      } else if (swipeDistance < -50) {
-                        // Swipe vers la droite → EDIT
-                        setSwipedGarde({ id: garde.id, direction: "right" })
-                      }
-                      
-                      setTouchStart(null)
-                    }
 
                     return (
-                      <div key={garde.id} className="relative overflow-visible">
-                        {/* Fond DELETE (rouge) à droite */}
-                        {isSwipedLeft && (
-                          <div 
-                            className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-end pr-6 cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteGarde(garde.id)
-                            }}
-                          >
-                            <div className="flex items-center gap-2 text-white font-semibold pointer-events-none">
-                              <Trash2 className="h-5 w-5" />
-                              <span>Supprimer</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Fond EDIT (bleu) à gauche */}
-                        {isSwipedRight && (
-                          <div 
-                            className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-start pl-6 cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleEditGarde(garde)
-                              setSwipedGarde(null)
-                            }}
-                          >
-                            <div className="flex items-center gap-2 text-white font-semibold pointer-events-none">
-                              <Edit2 className="h-5 w-5" />
-                              <span>Modifier</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Carte qui peut glisser */}
-                        <div 
-                          className={`relative bg-white rounded-2xl shadow-md transition-transform duration-300 ${
-                            isSwipedLeft ? "-translate-x-32" : isSwipedRight ? "translate-x-32" : "translate-x-0"
-                          }`}
-                          onTouchStart={handleTouchStart}
-                          onTouchMove={handleTouchMove}
-                          onTouchEnd={handleTouchEnd}
-                        >
+                      <div key={garde.id} className="relative">
+                        <div className="relative bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow">
                         {/* Badge créateur */}
                         <div className="absolute top-3 left-3 z-10 flex gap-1">
                           <span className={`px-2 py-1 rounded-md text-[10px] font-semibold shadow-sm ${
@@ -615,7 +521,46 @@ export default function AnimauxPage() {
                               <option value="annulé">Annulé</option>
                             </select>
                           </div>
-                          </div>
+                        </div>
+
+                        {/* Boutons d'action */}
+                        <div className="border-t border-slate-100 px-4 py-3 flex gap-2">
+                          <Button
+                            onClick={() => router.push(`/animaux/${garde.id}`)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-2"
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span>Voir</span>
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditGarde(garde)
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-2"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                            <span>Éditer</span>
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (confirm(`Supprimer la garde de ${garde.nomAnimal} ?`)) {
+                                handleDeleteGarde(garde.id)
+                              }
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>Suppr.</span>
+                          </Button>
+                        </div>
                         </div>
                       </div>
                     )
