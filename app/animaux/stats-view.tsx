@@ -32,7 +32,7 @@ interface GardeAnimaux {
   duree?: string
   tarif: number
   typeGarde: string
-  statut: "confirmé" | "terminé" | "annulé"
+  statut: "confirmé" | "en_cours" | "terminé" | "annulé"
   photos: string[]
   notes?: string
   isShared: boolean

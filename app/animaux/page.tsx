@@ -23,7 +23,7 @@ interface GardeAnimaux {
   duree?: string
   tarif: number
   typeGarde: string
-  statut: "confirmé" | "terminé" | "annulé"
+  statut: "confirmé" | "en_cours" | "terminé" | "annulé"
   photos: string[]
   notes?: string
   isShared: boolean
@@ -173,6 +173,7 @@ export default function AnimauxPage() {
 
   const filteredGardes = filter === "tous" ? gardes : gardes.filter((g) => g.statut === filter)
   const totalRevenu = gardes.filter((g) => g.statut === "terminé").reduce((sum, g) => sum + g.tarif, 0)
+  const revenuAVenir = gardes.filter((g) => g.statut === "confirmé" || g.statut === "en_cours").reduce((sum, g) => sum + g.tarif, 0)
 
   if (loading) {
     return (
@@ -280,13 +281,15 @@ export default function AnimauxPage() {
           <Card className="relative bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 rounded-2xl overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 to-teal-400/10 opacity-50 group-hover:opacity-70 transition-opacity"></div>
             <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Revenu total</CardTitle>
+              <CardTitle className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Revenus</CardTitle>
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
                 <DollarSign className="h-5 w-5 text-white" />
               </div>
             </CardHeader>
             <CardContent className="relative">
-              <div className="text-2xl font-bold text-emerald-900">{totalRevenu.toFixed(2)} €</div>
+              <div className="text-2xl font-bold text-emerald-900">
+                {totalRevenu.toFixed(2)} €
+              </div>
               <p className="text-xs text-emerald-600 mt-1">
                 {gardes.filter((g) => g.statut === "terminé").length} gardes terminées
               </p>
@@ -303,9 +306,11 @@ export default function AnimauxPage() {
             </CardHeader>
             <CardContent className="relative">
               <div className="text-2xl font-bold text-blue-900">
-                {gardes.filter((g) => g.statut === "confirmé").length}
+                {revenuAVenir.toFixed(2)} €
               </div>
-              <p className="text-xs text-blue-600 mt-1">confirmées</p>
+              <p className="text-xs text-blue-600 mt-1">
+                {gardes.filter((g) => g.statut === "confirmé" || g.statut === "en_cours").length} garde{gardes.filter((g) => g.statut === "confirmé" || g.statut === "en_cours").length > 1 ? 's' : ''} à venir
+              </p>
             </CardContent>
           </Card>
 
@@ -318,8 +323,10 @@ export default function AnimauxPage() {
               </div>
             </CardHeader>
             <CardContent className="relative">
-              <div className="text-2xl font-bold text-rose-900">{gardes.length}</div>
-              <p className="text-xs text-rose-600 mt-1">toutes périodes</p>
+              <div className="text-2xl font-bold text-rose-900">
+                {(totalRevenu + revenuAVenir).toFixed(2)} €
+              </div>
+              <p className="text-xs text-rose-600 mt-1">{gardes.length} gardes au total</p>
             </CardContent>
           </Card>
         </div>

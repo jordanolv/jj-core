@@ -1,6 +1,37 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 
+// GET - Récupérer une garde par ID
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    const garde = await prisma.gardeAnimaux.findUnique({
+      where: { id },
+      include: {
+        profile: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+
+    if (!garde) {
+      return NextResponse.json({ error: "Garde not found" }, { status: 404 })
+    }
+
+    return NextResponse.json(garde)
+  } catch (error) {
+    console.error("Error fetching garde:", error)
+    return NextResponse.json({ error: "Failed to fetch garde" }, { status: 500 })
+  }
+}
+
 // DELETE - Supprimer une garde
 export async function DELETE(
   request: NextRequest,
