@@ -1,8 +1,6 @@
-import type { NextConfig } from "next";
-// @ts-ignore - Incompatibilité de types entre Next.js 15 et next-pwa
 import withPWA from "next-pwa";
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   images: {
     remotePatterns: [],
     formats: ["image/avif", "image/webp"],
@@ -147,5 +145,4 @@ export default withPWA({
       },
     },
   ],
-  // @ts-ignore - Incompatibilité de types entre Next.js 15 et next-pwa
 })(nextConfig);

@@ -18,7 +18,15 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "public/sw.js",
+      "public/workbox-*.js",
     ],
+  },
+  {
+    files: ["next.config.mjs"],
+    rules: {
+      "@typescript-eslint/ban-ts-comment": "off",
+    },
   },
 ];
 
