@@ -16,7 +16,7 @@ export default withPWA({
   dest: "public",
   register: true,
   skipWaiting: true,
-  disable: false, // Activé en dev pour tester les notifications
+  disable: process.env.NODE_ENV === "development", // Désactivé en dev (on utilise sw-push.js direct)
   additionalManifestEntries: [
     { url: "/sw-push.js", revision: null },
   ],

@@ -91,28 +91,33 @@ export function NotificationSubscription({ profileId }: NotificationSubscription
       console.log("[Notifications] Récupération du service worker...");
       let registration = await navigator.serviceWorker.getRegistration();
 
+      // En dev, utiliser sw-dev.js, en prod utiliser sw.js (généré par next-pwa)
+      const isDev = process.env.NODE_ENV === "development";
+      const swPath = isDev ? "/sw-dev.js" : "/sw.js";
+
       if (!registration) {
-        console.log("[Notifications] Enregistrement du service worker...");
-        registration = await navigator.serviceWorker.register("/sw.js");
+        console.log(`[Notifications] Enregistrement du service worker (${swPath})...`);
+        registration = await navigator.serviceWorker.register(swPath, {
+          scope: "/"
+        });
       }
 
-      // Attendre que le service worker soit prêt avec un timeout
+      // Attendre que le service worker soit installé et activé
       console.log("[Notifications] Attente du service worker...");
-      const readyPromise = navigator.serviceWorker.ready;
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Service worker timeout")), 10000)
-      );
 
-      try {
-        registration = await Promise.race([readyPromise, timeoutPromise]) as ServiceWorkerRegistration;
-        console.log("[Notifications] Service worker prêt:", registration);
-      } catch (error) {
-        console.warn("[Notifications] Timeout du service worker, tentative quand même...");
-        // On essaie quand même avec la registration actuelle
-        if (!registration) {
-          throw new Error("Service worker non disponible");
-        }
+      if (registration.installing) {
+        console.log("[Notifications] SW en cours d'installation...");
+        await new Promise((resolve) => {
+          registration!.installing!.addEventListener("statechange", function() {
+            if (this.state === "activated") {
+              resolve(undefined);
+            }
+          });
+        });
       }
+
+      registration = await navigator.serviceWorker.ready;
+      console.log("[Notifications] Service worker prêt:", registration);
 
       // Récupérer la clé publique VAPID
       console.log("[Notifications] Récupération clé VAPID...");
