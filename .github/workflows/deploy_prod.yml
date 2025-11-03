@@ -107,9 +107,9 @@ jobs:
             echo "🔄 Stop existing PM2 process"
             pm2 delete jj-core || true
 
-            echo "🚀 Start Application with PM2 (port 4490)"
-            NODE_ENV=production PORT=4490 pm2 start npm --name "jj-core" -- start
-            
+            echo "🚀 Start Application with PM2 using ecosystem.config.js"
+            pm2 start ecosystem.config.js
+
             pm2 save
 
             echo "✅ JJ Core PROD deployment finished 🎉"
