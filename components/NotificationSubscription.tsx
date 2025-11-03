@@ -98,26 +98,16 @@ export function NotificationSubscription({ profileId }: NotificationSubscription
       if (!registration) {
         console.log(`[Notifications] Enregistrement du service worker (${swPath})...`);
         registration = await navigator.serviceWorker.register(swPath, {
-          scope: "/"
+          scope: "/",
+          updateViaCache: "none"
         });
+        console.log("[Notifications] Service worker enregistré:", registration);
       }
 
-      // Attendre que le service worker soit installé et activé
-      console.log("[Notifications] Attente du service worker...");
-
-      if (registration.installing) {
-        console.log("[Notifications] SW en cours d'installation...");
-        await new Promise((resolve) => {
-          registration!.installing!.addEventListener("statechange", function() {
-            if (this.state === "activated") {
-              resolve(undefined);
-            }
-          });
-        });
-      }
-
+      // Attendre que le service worker soit prêt (installé + activé)
+      console.log("[Notifications] Attente que le service worker soit prêt...");
       registration = await navigator.serviceWorker.ready;
-      console.log("[Notifications] Service worker prêt:", registration);
+      console.log("[Notifications] Service worker prêt:", registration.active?.state);
 
       // Récupérer la clé publique VAPID
       console.log("[Notifications] Récupération clé VAPID...");
