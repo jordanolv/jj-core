@@ -87,24 +87,32 @@ export async function getMonthlyBalance() {
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
 
-  // Récupérer tous les revenus du mois
-  const incomes = await prisma.income.findMany({
+  // Récupérer le mois du budget avec ses revenus et dépenses
+  const budgetMonth = await prisma.budgetMonth.findFirst({
     where: {
-      year,
+      year: {
+        year,
+      },
       month,
+    },
+    include: {
+      incomes: true,
+      expenses: true,
     },
   });
 
-  // Récupérer toutes les dépenses du mois
-  const expenses = await prisma.expense.findMany({
-    where: {
+  if (!budgetMonth) {
+    return {
+      totalIncome: 0,
+      totalExpenses: 0,
+      balance: 0,
       year,
       month,
-    },
-  });
+    };
+  }
 
-  const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalIncome = budgetMonth.incomes.reduce((sum, income) => sum + income.amount, 0);
+  const totalExpenses = budgetMonth.expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const balance = totalIncome - totalExpenses;
 
   return {
@@ -121,16 +129,16 @@ export async function getMonthlyBalance() {
  */
 export async function getDailyExpenses() {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-  const day = now.getDate();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-  // Récupérer les dépenses du jour
-  const expenses = await prisma.expense.findMany({
+  // Récupérer les dépenses du jour (filtrer par date)
+  const expenses = await prisma.budgetExpense.findMany({
     where: {
-      year,
-      month,
-      day,
+      date: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
     },
   });
 
@@ -140,9 +148,9 @@ export async function getDailyExpenses() {
   return {
     totalAmount,
     count,
-    year,
-    month,
-    day,
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+    day: now.getDate(),
   };
 }
 

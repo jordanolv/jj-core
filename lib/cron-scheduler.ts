@@ -17,9 +17,24 @@ export function initCronJobs() {
     return;
   }
 
-  // En développement, ne pas lancer les crons
+  // En développement, lancer un cron de test toutes les 10 secondes
   if (process.env.NODE_ENV === "development") {
-    console.log("[Cron] Development mode, cron jobs disabled");
+    console.log("[Cron] Development mode - starting test cron every 10 seconds");
+
+    cron.schedule("*/10 * * * * *", async () => {
+      try {
+        console.log("[Cron Test] Running test notification...");
+        const result = await sendMonthlyBalanceNotification();
+        console.log(
+          `[Cron Test] Test notification sent: ${result.sent} success, ${result.failed} failed`
+        );
+      } catch (error) {
+        console.error("[Cron Test] Error:", error);
+      }
+    });
+
+    isInitialized = true;
+    console.log("[Cron] ✅ Test cron initialized (every 10 seconds)");
     return;
   }
 
