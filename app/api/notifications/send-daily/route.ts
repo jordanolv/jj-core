@@ -3,13 +3,6 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/db";
 import webpush from "web-push";
 
-// Configuration de web-push avec les clés VAPID
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || "mailto:contact@jj-core.app",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 // Fonction pour calculer le solde du mois en cours
 async function calculateCurrentMonthBalance() {
   const now = new Date();
@@ -93,6 +86,13 @@ function formatAmount(amount: number): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // Configuration de web-push avec les clés VAPID (au moment de l'exécution)
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT || "mailto:contact@jj-core.app",
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+      process.env.VAPID_PRIVATE_KEY!
+    );
+
     // Vérifier l'authentification (ou utiliser un token secret pour le cron)
     const authHeader = req.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;

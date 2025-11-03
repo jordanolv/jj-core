@@ -3,15 +3,15 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/db";
 import webpush from "web-push";
 
-// Configuration de web-push avec les clés VAPID
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || "mailto:contact@jj-core.app",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 export async function POST(req: NextRequest) {
   try {
+    // Configuration de web-push avec les clés VAPID (au moment de l'exécution)
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT || "mailto:contact@jj-core.app",
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+      process.env.VAPID_PRIVATE_KEY!
+    );
+
     const session = await getServerSession();
 
     if (!session) {
