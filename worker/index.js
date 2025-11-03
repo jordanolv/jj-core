@@ -14,7 +14,9 @@ self.skipWaiting();
 cleanupOutdatedCaches();
 
 // Pré-cacher les assets - __WB_MANIFEST est injecté par Workbox
-precacheAndRoute(self.__WB_MANIFEST || []);
+// TEMPORAIREMENT DÉSACTIVÉ pour déboguer le problème d'installation
+// precacheAndRoute(self.__WB_MANIFEST || []);
+console.log('[SW] Precaching désactivé, manifest size:', (self.__WB_MANIFEST || []).length);
 
 // === ROUTES DE CACHE (reprises de next.config.mjs) ===
 
