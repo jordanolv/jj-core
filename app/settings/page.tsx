@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Settings, DollarSign, ChevronRight } from "lucide-react"
 import Header from "@/components/header"
+import { NotificationSubscription } from "@/components/NotificationSubscription"
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -121,6 +122,10 @@ export default function SettingsPage() {
                 </Card>
               )
             })}
+          </div>
+
+          <div className="mt-6">
+            <NotificationSubscription profileId={profileId} />
           </div>
 
           {settingsOptions.length === 0 && (

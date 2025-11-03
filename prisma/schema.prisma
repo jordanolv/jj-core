@@ -197,3 +197,17 @@ model DefaultBudgetCategory {
   @@unique([name, profileId]) // Pas de doublons par profil
   @@index([profileId])
 }
+
+// Push Notifications - Subscriptions
+model PushSubscription {
+  id         String   @id @default(cuid())
+  endpoint   String   @unique // URL unique pour chaque abonnement
+  p256dh     String   // Clé publique pour le chiffrement
+  auth       String   // Secret d'authentification
+  profileId  String? // Optionnel : pour savoir quel profil est abonné
+  userAgent  String? // Pour identifier l'appareil
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([profileId])
+}
