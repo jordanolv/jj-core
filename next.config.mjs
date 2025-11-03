@@ -10,10 +10,6 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  // Activer l'instrumentation pour les cron jobs
-  experimental: {
-    instrumentationHook: true,
-  },
 };
 
 export default withPWA({
