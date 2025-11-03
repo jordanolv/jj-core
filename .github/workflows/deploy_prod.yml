@@ -108,7 +108,7 @@ jobs:
             pm2 delete jj-core || true
 
             echo "🚀 Start Application with PM2 (port 4490)"
-            PORT=4490 pm2 start npm --name "jj-core" -- start
+            NODE_ENV=production PORT=4490 pm2 start npm --name "jj-core" -- start
             
             pm2 save
 
