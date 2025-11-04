@@ -10,7 +10,7 @@ export enum NotificationType {
 }
 
 // Interface pour les données de notification
-interface NotificationData {
+export interface NotificationData {
   title: string;
   body: string;
   icon?: string;
