@@ -2,6 +2,8 @@ import cron from "node-cron";
 import {
   sendMonthlyBalanceNotification,
   sendDailyExpensesNotification,
+  sendGardeTomorrowNotification,
+  sendGardeTodayNotification,
 } from "./notifications";
 
 let isInitialized = false;
@@ -26,7 +28,7 @@ export function initCronJobs() {
         console.log("[Cron Test] Running test notification...");
         const result = await sendMonthlyBalanceNotification();
         console.log(
-          `[Cron Test] Test notification sent: ${result.sent} success, ${result.failed} failed`
+          `[Cron Test] Sent to ${result.sent} devices. Balance notification.`
         );
       } catch (error) {
         console.error("[Cron Test] Error:", error);
@@ -78,10 +80,50 @@ export function initCronJobs() {
     }
   );
 
+  // Cron 3: Notification de garde pour demain - Chaque jour à 21h00
+  cron.schedule(
+    "0 21 * * *",
+    async () => {
+      try {
+        console.log("[Cron] Running garde tomorrow notification...");
+        const result = await sendGardeTomorrowNotification();
+        console.log(
+          `[Cron] Garde tomorrow notification sent: ${result.sent} success, ${result.failed} failed, ${result.gardesCount} gardes`
+        );
+      } catch (error) {
+        console.error("[Cron] Error sending garde tomorrow notification:", error);
+      }
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  // Cron 4: Notification de garde pour aujourd'hui - Chaque jour à 8h00
+  cron.schedule(
+    "0 8 * * *",
+    async () => {
+      try {
+        console.log("[Cron] Running garde today notification...");
+        const result = await sendGardeTodayNotification();
+        console.log(
+          `[Cron] Garde today notification sent: ${result.sent} success, ${result.failed} failed, ${result.gardesCount} gardes`
+        );
+      } catch (error) {
+        console.error("[Cron] Error sending garde today notification:", error);
+      }
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
   isInitialized = true;
   console.log("[Cron] ✅ Cron jobs initialized successfully");
   console.log("[Cron] - Monthly balance: Every day at 8:00 AM");
   console.log("[Cron] - Daily expenses: Every day at 9:00 PM");
+  console.log("[Cron] - Garde tomorrow: Every day at 9:00 PM");
+  console.log("[Cron] - Garde today: Every day at 8:00 AM");
 }
 
 /**

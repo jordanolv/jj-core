@@ -5,6 +5,8 @@ import webpush from "web-push";
 export enum NotificationType {
   MONTHLY_BALANCE = "monthly_balance",
   DAILY_EXPENSES = "daily_expenses",
+  GARDE_TOMORROW = "garde_tomorrow",
+  GARDE_TODAY = "garde_today",
 }
 
 // Interface pour les données de notification
@@ -88,18 +90,20 @@ export async function getMonthlyBalance() {
   const month = now.getMonth() + 1;
 
   // Récupérer le mois du budget avec ses revenus et dépenses
-  const budgetMonth = await prisma.budgetMonth.findFirst({
-    where: {
-      year: {
-        year,
-      },
-      month,
-    },
+  const budgetYear = await prisma.budgetYear.findFirst({
+    where: { year },
     include: {
-      incomes: true,
-      expenses: true,
+      months: {
+        where: { month },
+        include: {
+          incomes: true,
+          expenses: true,
+        },
+      },
     },
   });
+
+  const budgetMonth = budgetYear?.months[0];
 
   if (!budgetMonth) {
     return {
@@ -204,4 +208,133 @@ export async function sendDailyExpensesNotification() {
   };
 
   return await sendNotificationToAll(notification);
+}
+
+/**
+ * Récupère les gardes qui commencent demain
+ */
+export async function getGardesTomorrow() {
+  const now = new Date();
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const startOfTomorrow = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 0, 0, 0);
+  const endOfTomorrow = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 23, 59, 59);
+
+  const gardes = await prisma.gardeAnimaux.findMany({
+    where: {
+      dateDebut: {
+        gte: startOfTomorrow,
+        lte: endOfTomorrow,
+      },
+    },
+  });
+
+  return gardes;
+}
+
+/**
+ * Récupère les gardes qui commencent aujourd'hui
+ */
+export async function getGardesToday() {
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+  const gardes = await prisma.gardeAnimaux.findMany({
+    where: {
+      dateDebut: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
+    },
+  });
+
+  return gardes;
+}
+
+/**
+ * Envoie la notification de garde pour demain (21h)
+ */
+export async function sendGardeTomorrowNotification() {
+  const gardes = await getGardesTomorrow();
+
+  if (gardes.length === 0) {
+    return { sent: 0, failed: 0, total: 0, message: "No gardes tomorrow" };
+  }
+
+  // Envoyer une notification pour chaque garde
+  const results = await Promise.all(
+    gardes.map(async (garde) => {
+      const notification: NotificationData = {
+        title: "🐕 Garde demain",
+        body: `Votre garde avec ${garde.nomAnimal} commence demain`,
+        icon: "/icon-192x192.png",
+        badge: "/icon-192x192.png",
+        tag: `garde-tomorrow-${garde.id}`,
+        data: {
+          type: NotificationType.GARDE_TOMORROW,
+          gardeId: garde.id,
+          nomAnimal: garde.nomAnimal,
+          dateDebut: garde.dateDebut,
+        },
+      };
+
+      return await sendNotificationToAll(notification);
+    })
+  );
+
+  // Agréger les résultats
+  const totalSent = results.reduce((sum, r) => sum + r.sent, 0);
+  const totalFailed = results.reduce((sum, r) => sum + r.failed, 0);
+  const totalSubscriptions = results[0]?.total || 0;
+
+  return {
+    sent: totalSent,
+    failed: totalFailed,
+    total: totalSubscriptions,
+    gardesCount: gardes.length,
+  };
+}
+
+/**
+ * Envoie la notification de garde pour aujourd'hui (8h)
+ */
+export async function sendGardeTodayNotification() {
+  const gardes = await getGardesToday();
+
+  if (gardes.length === 0) {
+    return { sent: 0, failed: 0, total: 0, message: "No gardes today" };
+  }
+
+  // Envoyer une notification pour chaque garde
+  const results = await Promise.all(
+    gardes.map(async (garde) => {
+      const notification: NotificationData = {
+        title: "🐕 Garde aujourd'hui",
+        body: `Votre garde avec ${garde.nomAnimal} commence aujourd'hui`,
+        icon: "/icon-192x192.png",
+        badge: "/icon-192x192.png",
+        tag: `garde-today-${garde.id}`,
+        data: {
+          type: NotificationType.GARDE_TODAY,
+          gardeId: garde.id,
+          nomAnimal: garde.nomAnimal,
+          dateDebut: garde.dateDebut,
+        },
+      };
+
+      return await sendNotificationToAll(notification);
+    })
+  );
+
+  // Agréger les résultats
+  const totalSent = results.reduce((sum, r) => sum + r.sent, 0);
+  const totalFailed = results.reduce((sum, r) => sum + r.failed, 0);
+  const totalSubscriptions = results[0]?.total || 0;
+
+  return {
+    sent: totalSent,
+    failed: totalFailed,
+    total: totalSubscriptions,
+    gardesCount: gardes.length,
+  };
 }

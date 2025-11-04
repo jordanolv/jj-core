@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   sendMonthlyBalanceNotification,
   sendDailyExpensesNotification,
+  sendGardeTomorrowNotification,
+  sendGardeTodayNotification,
   NotificationType,
 } from "@/lib/notifications";
 
@@ -45,6 +47,14 @@ export async function POST(req: NextRequest) {
 
       case NotificationType.DAILY_EXPENSES:
         result = await sendDailyExpensesNotification();
+        break;
+
+      case NotificationType.GARDE_TOMORROW:
+        result = await sendGardeTomorrowNotification();
+        break;
+
+      case NotificationType.GARDE_TODAY:
+        result = await sendGardeTodayNotification();
         break;
 
       default:
