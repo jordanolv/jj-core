@@ -1,0 +1,21 @@
+FROM node:20-alpine AS base
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY apps/web/package*.json ./apps/web/
+
+RUN npm install --workspaces=false
+RUN npm install --workspace=apps/web
+
+COPY apps/web ./apps/web
+
+WORKDIR /app/apps/web
+RUN npm run build
+
+EXPOSE 3000
+
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
+CMD ["node", ".output/server/index.mjs"]
