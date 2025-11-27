@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-xl bg-white/70 dark:bg-black/30 border border-white/20 dark:border-white/10;
+  }
+
+  .glass-card {
+    @apply glass rounded-2xl p-6 shadow-xl;
+  }
+
+  .glass-hover {
+    @apply glass transition-all duration-300 hover:bg-white/80 dark:hover:bg-black/40 hover:shadow-2xl;
+  }
+}
