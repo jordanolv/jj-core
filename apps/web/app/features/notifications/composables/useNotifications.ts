@@ -146,18 +146,6 @@ export const useNotifications = () => {
     const hasServiceWorker = 'serviceWorker' in navigator;
     const hasPushManager = 'PushManager' in window;
 
-    const debugInfo = {
-      hasNotification,
-      hasServiceWorker,
-      hasPushManager,
-      permission: hasNotification ? Notification.permission : 'N/A',
-      userAgent: navigator.userAgent,
-      standalone: (window.navigator as any).standalone
-    };
-
-    console.log('Push support check:', debugInfo);
-    alert('Debug: ' + JSON.stringify(debugInfo, null, 2));
-
     isPushSupported.value = hasNotification && hasServiceWorker && hasPushManager;
 
     if (isPushSupported.value) {

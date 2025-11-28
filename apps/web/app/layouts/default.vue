@@ -4,23 +4,31 @@
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
-    <header class="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
-        <NuxtLink to="/" class="text-xl font-bold">JJ Core</NuxtLink>
-        <div class="flex items-center gap-4">
+  <div class="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-rose-900 text-white">
+    <!-- Mobile-first header -->
+    <header class="sticky top-0 z-50 px-4 py-3 sm:px-6 sm:py-4">
+      <div class="flex items-center justify-between">
+        <NuxtLink
+          to="/"
+          class="w-12 h-12 rounded-full backdrop-blur-xl bg-white/10 border border-white/20 flex items-center justify-center active:scale-95 transition-all duration-300"
+        >
+          <span class="text-xl">🏠</span>
+        </NuxtLink>
+        <div class="flex items-center gap-3">
           <NuxtLink
             to="/notifications"
-            class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition"
+            class="w-12 h-12 rounded-full backdrop-blur-xl bg-white/10 border border-white/20 flex items-center justify-center active:scale-95 transition-all duration-300"
             title="Notifications"
           >
-            🔔
+            <span class="text-xl">🔔</span>
           </NuxtLink>
-          <ThemeToggle />
+          <button class="w-12 h-12 rounded-full backdrop-blur-xl bg-white/10 border border-white/20 flex items-center justify-center active:scale-95 transition-all duration-300">
+            <span class="text-xl">⚙️</span>
+          </button>
         </div>
       </div>
     </header>
-    <main class="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
+    <main class="w-full">
       <slot />
     </main>
   </div>
