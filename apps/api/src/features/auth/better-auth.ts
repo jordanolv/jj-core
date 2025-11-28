@@ -20,6 +20,13 @@ export const auth = betterAuth({
   },
   secret: process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET!,
   trustedOrigins: [process.env.CORS_ORIGIN || "http://localhost:3000"],
+  advanced: {
+    useSecureCookies: process.env.NODE_ENV === "production",
+    cookieOptions: {
+      sameSite: "none",
+      secure: true,
+    },
+  },
 });
 
 export type Session = typeof auth.$Infer.Session;
