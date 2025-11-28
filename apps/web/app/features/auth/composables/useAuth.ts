@@ -35,9 +35,12 @@ export function useAuth() {
     if (result.error) {
       throw new Error(result.error.message || "Erreur de connexion");
     }
-    if ((result.data as any)?.token) {
-      authWrapper.setToken((result.data as any).token);
+
+    const data = result.data as any;
+    if (data?.token) {
+      authWrapper.setToken(data.token);
     }
+
     return result.data;
   }
 
@@ -46,9 +49,12 @@ export function useAuth() {
     if (result.error) {
       throw new Error(result.error.message || "Erreur lors de l'inscription");
     }
-    if ((result.data as any)?.token) {
-      authWrapper.setToken((result.data as any).token);
+
+    const data = result.data as any;
+    if (data?.token) {
+      authWrapper.setToken(data.token);
     }
+
     return result.data;
   }
 
