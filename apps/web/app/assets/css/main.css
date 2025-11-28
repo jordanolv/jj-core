@@ -1,3 +1,15 @@
 @import "tailwindcss";
 
 @variant dark (.dark &);
+
+/* Force dark mode globally */
+html {
+  @apply dark;
+}
+
+html,
+body {
+  @apply bg-black text-white;
+  min-height: 100vh;
+  min-height: 100dvh; /* Pour mobile avec dynamic viewport */
+}
