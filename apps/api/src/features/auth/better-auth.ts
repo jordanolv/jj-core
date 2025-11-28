@@ -14,11 +14,11 @@ const db = await getDatabase();
 
 export const auth = betterAuth({
   database: mongodbAdapter(db),
-  baseURL: process.env.API_URL || "http://localhost:4491",
+  baseURL: process.env.BETTER_AUTH_URL || process.env.API_URL || "http://localhost:4491",
   emailAndPassword: {
     enabled: true,
   },
-  secret: process.env.AUTH_SECRET!,
+  secret: process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET!,
   trustedOrigins: [process.env.CORS_ORIGIN || "http://localhost:3000"],
 });
 
