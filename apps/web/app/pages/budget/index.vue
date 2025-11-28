@@ -83,6 +83,20 @@ function formatBalance(amount: number) {
   }).format(amount);
 }
 
+function getPercentageChange(month: number): string {
+  const currentBalance = monthBalances.value[month] ?? 0;
+  const previousMonth = month === 1 ? 12 : month - 1;
+  const previousBalance = monthBalances.value[previousMonth] ?? 0;
+
+  if (previousBalance === 0) {
+    return currentBalance >= 0 ? '+100%' : '-100%';
+  }
+
+  const change = ((currentBalance - previousBalance) / Math.abs(previousBalance)) * 100;
+  const sign = change >= 0 ? '+' : '';
+  return `${sign}${change.toFixed(1)}%`;
+}
+
 function generateSparkline(month: number): string {
   const expenses = monthExpenses.value[month] || [];
   if (expenses.length === 0) return '';
@@ -105,34 +119,47 @@ function generateSparkline(month: number): string {
   const maxExpense = Math.max(...dailyExpenses, 1);
 
   // Générer le path SVG (sparkline)
-  const width = 60;
-  const height = 24;
+  const width = 70;
+  const height = 28;
   const points = dailyExpenses.map((expense, index) => {
-    const x = (index / (daysInMonth - 1)) * width;
+    const x = (index / Math.max(daysInMonth - 1, 1)) * width;
     const y = height - (expense / maxExpense) * height;
     return `${x},${y}`;
   });
 
   return `M ${points.join(' L ')}`;
 }
+
+// Gradients uniques par mois
+const monthGradients = [
+  { tailwind: 'from-blue-400 to-blue-600', colors: ['#60a5fa', '#2563eb'] },      // Janvier - Bleu glacé
+  { tailwind: 'from-pink-400 to-rose-600', colors: ['#f9a8d4', '#e11d48'] },      // Février - Rose/Rouge
+  { tailwind: 'from-green-400 to-emerald-600', colors: ['#4ade80', '#059669'] },  // Mars - Vert printemps
+  { tailwind: 'from-yellow-400 to-amber-600', colors: ['#facc15', '#d97706'] },   // Avril - Jaune/Ambre
+  { tailwind: 'from-purple-400 to-purple-600', colors: ['#c084fc', '#9333ea'] },  // Mai - Violet
+  { tailwind: 'from-orange-400 to-orange-600', colors: ['#fb923c', '#ea580c'] },  // Juin - Orange été
+  { tailwind: 'from-red-400 to-red-600', colors: ['#f87171', '#dc2626'] },        // Juillet - Rouge chaud
+  { tailwind: 'from-cyan-400 to-cyan-600', colors: ['#22d3ee', '#0891b2'] },      // Août - Cyan océan
+  { tailwind: 'from-amber-400 to-yellow-600', colors: ['#fbbf24', '#ca8a04'] },   // Septembre - Ambre automne
+  { tailwind: 'from-rose-400 to-pink-600', colors: ['#fb7185', '#db2777'] },      // Octobre - Rose automnal
+  { tailwind: 'from-slate-400 to-slate-600', colors: ['#94a3b8', '#475569'] },    // Novembre - Gris nuageux
+  { tailwind: 'from-indigo-400 to-blue-600', colors: ['#818cf8', '#2563eb'] },    // Décembre - Indigo hivernal
+];
+
+function getMonthGradient(month: number): string {
+  return monthGradients[month - 1]?.tailwind || 'from-slate-400 to-slate-600';
+}
+
+function getMonthColors(month: number): string[] {
+  return monthGradients[month - 1]?.colors || ['#94a3b8', '#475569'];
+}
 </script>
 
 <template>
-  <div class="p-4 sm:p-6">
-    <div class="mx-auto max-w-2xl">
-      <!-- Header -->
-      <header class="mb-6">
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="text-3xl sm:text-4xl font-bold text-purple-300">Budget</h1>
-          <NuxtLink
-            to="/budget/subscriptions"
-            class="rounded-full backdrop-blur-xl bg-white/10 border border-white/20 px-4 py-2 text-xs sm:text-sm font-semibold text-white transition-all active:scale-95"
-          >
-            🔄 Abonnements
-          </NuxtLink>
-        </div>
-
-        <div class="flex items-center justify-center gap-3">
+  <div class="px-4 pb-4 sm:px-6 sm:pb-6">
+      <div class="mx-auto max-w-2xl">
+        <!-- Sélecteur d'année + Abonnements -->
+        <div class="flex items-center justify-center gap-3 mb-6 relative">
           <button
             @click="changeYear(-1)"
             class="w-10 h-10 rounded-full backdrop-blur-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-semibold transition-all active:scale-95"
@@ -148,56 +175,72 @@ function generateSparkline(month: number): string {
           >
             →
           </button>
+
+          <NuxtLink
+            to="/budget/subscriptions"
+            class="absolute right-0 w-10 h-10 rounded-full backdrop-blur-xl bg-white/10 border border-white/20 flex items-center justify-center transition-all active:scale-95"
+            title="Abonnements"
+          >
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </NuxtLink>
         </div>
-      </header>
 
-      <!-- Loading state -->
-      <div v-if="loading" class="flex justify-center py-12">
-        <div class="h-10 w-10 sm:h-12 sm:w-12 animate-spin rounded-full border-4 border-purple-300 border-t-purple-600"></div>
-      </div>
+        <!-- Loading state -->
+        <div v-if="loading" class="flex justify-center py-12">
+          <div class="h-10 w-10 sm:h-12 sm:w-12 animate-spin rounded-full border-4 border-purple-300 border-t-purple-600"></div>
+        </div>
 
-      <!-- Liste style crypto -->
-      <div v-else class="space-y-2">
+        <!-- Liste style crypto -->
+        <div v-else class="space-y-1">
         <template v-for="month in 12" :key="month">
           <NuxtLink
             v-if="months.includes(month)"
             :to="`/budget/${selectedYear}/${month}`"
-            class="group flex items-center gap-4 p-4 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl transition-all active:scale-[0.98] sm:hover:bg-white/10"
+            class="group flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all active:bg-white/5 sm:hover:bg-white/5"
           >
-            <!-- Icône emoji ronde -->
-            <div class="w-12 h-12 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl shrink-0">
-              📅
+            <!-- Numéro du mois avec gradient unique -->
+            <div class="min-w-0 flex gap-3">
+              <div
+                class="w-10 h-10 rounded-full bg-linear-to-br flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-lg"
+                :class="getMonthGradient(month)"
+              >
+                {{ month.toString().padStart(2, '0') }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-semibold text-white">{{ monthNames[month - 1] }}</h3>
+                <p class="text-xs text-slate-400">{{ selectedYear }}</p>
+              </div>
             </div>
 
-            <!-- Nom du mois + symbole -->
-            <div class="flex-1 min-w-0">
-              <h3 class="text-base sm:text-lg font-bold text-white">{{ monthNames[month - 1] }}</h3>
-              <p class="text-xs text-white/60">{{ selectedYear }}</p>
-            </div>
-
-            <!-- Mini sparkline -->
+            <!-- Mini sparkline avec la couleur du mois -->
             <svg
-              v-if="generateSparkline(month)"
-              class="w-[80px] sm:w-[100px] h-8 shrink-0 hidden sm:block"
-              viewBox="0 0 80 32"
-              :class="(monthBalances[month] ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'"
+              v-if="monthExpenses[month]?.length > 0"
+              class="w-[70px] h-7 shrink-0 opacity-80 -mr-2"
+              viewBox="0 0 70 28"
               fill="none"
-              stroke="currentColor"
               stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
             >
-              <path :d="generateSparkline(month)" />
+              <defs>
+                <linearGradient :id="`gradient-${month}`" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" :stop-color="getMonthColors(month)[0]" />
+                  <stop offset="100%" :stop-color="getMonthColors(month)[1]" />
+                </linearGradient>
+              </defs>
+              <path :d="generateSparkline(month)" :stroke="`url(#gradient-${month})`" />
             </svg>
 
             <!-- Solde + % -->
             <div class="text-right shrink-0">
-              <p class="text-base sm:text-lg font-bold text-white">{{ formatBalance(monthBalances[month] ?? 0) }}</p>
+              <p class="text-sm font-medium text-slate-200">{{ formatBalance(monthBalances[month] ?? 0) }}</p>
               <p
-                class="text-xs font-semibold"
-                :class="(monthBalances[month] ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'"
+                class="text-xs font-medium"
+                :class="getPercentageChange(month).startsWith('+') ? 'text-emerald-500' : 'text-rose-500'"
               >
-                {{ (monthBalances[month] ?? 0) >= 0 ? '+' : '' }}{{ ((monthBalances[month] ?? 0) / 1000).toFixed(1) }}k
+                {{ getPercentageChange(month) }}
               </p>
             </div>
           </NuxtLink>
@@ -205,18 +248,18 @@ function generateSparkline(month: number): string {
           <button
             v-else
             @click="createNewMonth(month)"
-            class="w-full flex items-center gap-4 p-4 backdrop-blur-xl bg-white/5 border border-dashed border-white/20 rounded-2xl transition-all active:scale-[0.98] sm:hover:bg-white/10"
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all active:bg-white/5 sm:hover:bg-white/5 opacity-40"
           >
-            <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-xl shrink-0">
+            <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-lg shrink-0">
               ➕
             </div>
             <div class="flex-1 text-left">
-              <h3 class="text-base sm:text-lg font-bold text-white/60">{{ monthNames[month - 1] }}</h3>
-              <p class="text-xs text-white/40">Créer le mois</p>
+              <h3 class="text-base font-semibold text-slate-400">{{ monthNames[month - 1] }}</h3>
+              <p class="text-xs text-slate-500">Créer</p>
             </div>
           </button>
         </template>
+        </div>
       </div>
-    </div>
   </div>
 </template>
