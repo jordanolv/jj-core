@@ -1,5 +1,4 @@
 import { useAuthClient } from "../../../lib/auth-client";
-import { authWrapper } from "../../../lib/auth-wrapper";
 
 interface LoginPayload {
   email: string;
@@ -35,12 +34,6 @@ export function useAuth() {
     if (result.error) {
       throw new Error(result.error.message || "Erreur de connexion");
     }
-
-    const data = result.data as any;
-    if (data?.token) {
-      authWrapper.setToken(data.token);
-    }
-
     return result.data;
   }
 
@@ -49,17 +42,10 @@ export function useAuth() {
     if (result.error) {
       throw new Error(result.error.message || "Erreur lors de l'inscription");
     }
-
-    const data = result.data as any;
-    if (data?.token) {
-      authWrapper.setToken(data.token);
-    }
-
     return result.data;
   }
 
   async function logout() {
-    authWrapper.removeToken();
     await authClient.signOut();
   }
 

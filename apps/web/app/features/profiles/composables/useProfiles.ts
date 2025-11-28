@@ -1,5 +1,3 @@
-import { authWrapper } from '../../../lib/auth-wrapper';
-
 interface Profile {
   id: string;
   name: string;
@@ -14,7 +12,6 @@ export function useProfiles() {
   async function fetchProfiles(): Promise<Profile[]> {
     const response = await $fetch<{ profiles: Profile[] }>(`${apiUrl}/profiles`, {
       credentials: "include",
-      headers: authWrapper.getAuthHeaders(),
     });
     return response.profiles;
   }
@@ -24,7 +21,6 @@ export function useProfiles() {
       method: "POST",
       body: data,
       credentials: "include",
-      headers: authWrapper.getAuthHeaders(),
     });
     return response.profile;
   }
