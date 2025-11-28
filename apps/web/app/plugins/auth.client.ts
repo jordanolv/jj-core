@@ -15,6 +15,21 @@ export default defineNuxtPlugin(() => {
 
   const authClient = createAuthClient({
     baseURL: apiUrl,
+    fetchOptions: {
+      customFetchImpl: async (url, options) => {
+        const token = authWrapper.getToken();
+        const headers = new Headers(options?.headers);
+
+        if (token) {
+          headers.set('Authorization', `Bearer ${token}`);
+        }
+
+        return fetch(url, {
+          ...options,
+          headers,
+        });
+      },
+    },
   });
 
   return {
