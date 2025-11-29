@@ -2,3 +2,25 @@
 
 @variant dark (.dark &);
 
+/* Force dark mode globally */
+html {
+  color-scheme: dark;
+}
+
+html.dark,
+html,
+body {
+  background-color: #000000;
+  color: #ffffff;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Safe area pour iPhone (notch, status bar, home indicator) */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+}
+

@@ -37,8 +37,10 @@ function navigateToFeature(route: string) {
   navigateTo(route);
 }
 
-// Fermer avec Escape
+// Force dark mode
 onMounted(() => {
+  document.documentElement.classList.add('dark');
+
   const handleEscape = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       showFeatureSwitcher.value = false;
