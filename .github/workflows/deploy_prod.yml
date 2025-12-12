@@ -1,4 +1,4 @@
-name: 🚀 Deploy JJ Core PROD to VPS
+name: 🚀 Deploy JJ Hub PROD to VPS
 
 on:
   push:
@@ -28,25 +28,13 @@ jobs:
               ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'EOF'
             echo "✅ Connected to VPS"
 
-            echo "💾 Backup .env and uploads if they exist"
+            echo "💾 Backup .env if it exists"
             mkdir -p ~/backups
 
             # Backup .env
             if [ -f ~/projects/jj-core/prod/.env ]; then
               cp ~/projects/jj-core/prod/.env ~/backups/jj-core.env
               echo "✅ .env backed up"
-            fi
-
-            # Backup database
-            if [ -f ~/projects/jj-core/prod/prisma/dev.db ]; then
-              cp ~/projects/jj-core/prod/prisma/dev.db ~/backups/jj-core.db
-              echo "✅ Database backed up"
-            fi
-
-            # Backup uploads
-            if [ -d ~/projects/jj-core/prod/public/uploads ]; then
-              rsync -a ~/projects/jj-core/prod/public/uploads/ ~/backups/uploads/
-              echo "✅ Uploads backed up"
             fi
 
             mkdir -p ~/projects/jj-core/prod
@@ -65,30 +53,17 @@ jobs:
             git reset --hard origin/main
 
             echo "🧹 Clean build directories"
-            rm -rf .next/
+            rm -rf apps/web/.output/
+            rm -rf apps/web/.nuxt/
             rm -rf node_modules/
 
             git status
 
-            echo "🔄 Restore .env, database and uploads"
+            echo "🔄 Restore .env"
             # Restore .env
             if [ -f ~/backups/jj-core.env ]; then
               cp ~/backups/jj-core.env ~/projects/jj-core/prod/.env
               echo "✅ .env restored"
-            fi
-
-            # Restore database
-            if [ -f ~/backups/jj-core.db ]; then
-              mkdir -p ~/projects/jj-core/prod/prisma
-              cp ~/backups/jj-core.db ~/projects/jj-core/prod/prisma/dev.db
-              echo "✅ Database restored"
-            fi
-
-            # Restore uploads
-            if [ -d ~/backups/uploads ]; then
-              mkdir -p ~/projects/jj-core/prod/public/uploads
-              rsync -a ~/backups/uploads/ ~/projects/jj-core/prod/public/uploads/
-              echo "✅ Uploads restored"
             fi
 
             echo "🔧 Update permissions"
@@ -98,19 +73,20 @@ jobs:
             cd ~/projects/jj-core/prod
             npm ci
 
-            echo "🗄️ Generate Prisma Client"
-            npx prisma generate
+            echo "🏗️ Build API"
+            npm run build --workspace apps/api
 
-            echo "🏗️ Build Application"
-            npm run build
+            echo "🏗️ Build Web"
+            npm run build --workspace apps/web
 
-            echo "🔄 Stop existing PM2 process"
-            pm2 delete jj-core || true
+            echo "🔄 Stop existing PM2 processes"
+            pm2 delete jj-hub-api || true
+            pm2 delete jj-hub-web || true
 
-            echo "🚀 Start Application with PM2 using ecosystem.config.js"
+            echo "🚀 Start Applications with PM2"
             pm2 start ecosystem.config.js
 
             pm2 save
 
-            echo "✅ JJ Core PROD deployment finished 🎉"
+            echo "✅ JJ Hub PROD deployment finished 🎉"
           EOF

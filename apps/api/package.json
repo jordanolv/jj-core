@@ -6,6 +6,8 @@
     "build": "echo 'No build needed with tsx'",
     "start": "tsx src/index.ts",
     "seed:user": "tsx scripts/seed-user.ts",
+    "create:account": "tsx scripts/create-account.ts",
+    "cleanup:migration": "tsx scripts/cleanup-migration.ts",
     "migrate:old": "tsx scripts/migrate-from-old.ts",
     "migrate:import": "tsx scripts/import-from-json.ts"
   },
