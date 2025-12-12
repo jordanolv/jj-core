@@ -5,7 +5,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "echo 'No build needed with tsx'",
     "start": "tsx src/index.ts",
-    "seed:user": "tsx scripts/seed-user.ts"
+    "seed:user": "tsx scripts/seed-user.ts",
+    "migrate:old": "tsx scripts/migrate-from-old.ts",
+    "migrate:import": "tsx scripts/import-from-json.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.6",
