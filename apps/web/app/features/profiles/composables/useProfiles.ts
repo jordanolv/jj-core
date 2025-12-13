@@ -10,14 +10,14 @@ export function useProfiles() {
   const selectedProfile = useState<Profile | null>("selected-profile", () => null);
 
   async function fetchProfiles(): Promise<Profile[]> {
-    const response = await $fetch<{ profiles: Profile[] }>(`${apiUrl}/profiles`, {
+    const response = await $fetch<{ profiles: Profile[] }>(`${apiUrl}/api/profiles`, {
       credentials: "include",
     });
     return response.profiles;
   }
 
   async function createProfile(data: { name: string; avatar?: string }): Promise<Profile> {
-    const response = await $fetch<{ profile: Profile }>(`${apiUrl}/profiles`, {
+    const response = await $fetch<{ profile: Profile }>(`${apiUrl}/api/profiles`, {
       method: "POST",
       body: data,
       credentials: "include",

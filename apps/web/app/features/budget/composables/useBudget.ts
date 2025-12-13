@@ -3,7 +3,7 @@ import { useProfiles } from "../../profiles/composables/useProfiles";
 export function useBudget() {
   const config = useRuntimeConfig();
   const apiUrl = config.public.apiUrl || 'http://localhost:4491';
-  const BASE_URL = `${apiUrl}/budget`;
+  const BASE_URL = `${apiUrl}/api/budget`;
   const { selectedProfile } = useProfiles();
 
   function getHeaders() {

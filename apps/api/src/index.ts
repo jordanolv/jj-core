@@ -51,10 +51,10 @@ app.on(["POST", "GET"], "/api/auth/**", async (c) => {
   return await auth.handler(c.req.raw);
 });
 
-app.route("/profiles", profilesRouter);
-app.route("/budget", budgetRouter);
-app.route("/notifications", notificationRouter);
-app.route("/gardes", gardesRouter);
+app.route("/api/profiles", profilesRouter);
+app.route("/api/budget", budgetRouter);
+app.route("/api/notifications", notificationRouter);
+app.route("/api/gardes", gardesRouter);
 
 const port = Number(process.env.PORT) || 4491;
 

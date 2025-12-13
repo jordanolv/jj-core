@@ -33,7 +33,7 @@ export const useNotifications = () => {
   const fetchNotificationTypes = async () => {
     try {
       const response = await $fetch<{ types: NotificationType[] }>(
-        `${apiUrl}/notifications/types`
+        `${apiUrl}/api/notifications/types`
       );
       notificationTypes.value = response.types;
     } catch (error) {
@@ -44,7 +44,7 @@ export const useNotifications = () => {
   const fetchSubscriptions = async (profileId: string) => {
     try {
       const response = await $fetch<{ subscriptions: NotificationSubscription[] }>(
-        `${apiUrl}/notifications/subscriptions`,
+        `${apiUrl}/api/notifications/subscriptions`,
         {
           headers: {
             'X-Profile-Id': profileId,
@@ -65,8 +65,8 @@ export const useNotifications = () => {
   ) => {
     isLoading.value = true;
     try {
-      console.log('Sending subscription request to:', `${apiUrl}/notifications/subscriptions`);
-      await $fetch(`${apiUrl}/notifications/subscriptions`, {
+      console.log('Sending subscription request to:', `${apiUrl}/api/notifications/subscriptions`);
+      await $fetch(`${apiUrl}/api/notifications/subscriptions`, {
         method: 'POST',
         headers: {
           'X-Profile-Id': profileId,
@@ -110,7 +110,7 @@ export const useNotifications = () => {
 
     try {
       const vapidResponse = await $fetch<{ publicKey: string }>(
-        `${apiUrl}/notifications/vapid-public-key`
+        `${apiUrl}/api/notifications/vapid-public-key`
       );
 
       const registration = await navigator.serviceWorker.ready;
@@ -119,7 +119,7 @@ export const useNotifications = () => {
         applicationServerKey: vapidResponse.publicKey,
       });
 
-      await $fetch(`${apiUrl}/notifications/push-subscription`, {
+      await $fetch(`${apiUrl}/api/notifications/push-subscription`, {
         method: 'POST',
         headers: {
           'X-Profile-Id': profileId,

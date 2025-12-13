@@ -22,7 +22,7 @@ export interface Garde {
 export function useAnimaux() {
   const config = useRuntimeConfig();
   const apiUrl = config.public.apiUrl || 'http://localhost:4491';
-  const BASE_URL = `${apiUrl}/gardes`;
+  const BASE_URL = `${apiUrl}/api/gardes`;
   const { selectedProfile } = useProfiles();
 
   function getHeaders() {
