@@ -10,7 +10,7 @@ const route = useRoute();
 const year = parseInt(route.params.year as string);
 const month = parseInt(route.params.month as string);
 
-const { getMonthDetails, createExpense, createIncome } = useBudget();
+const { getMonthDetails, createExpense, updateExpense, deleteExpense, createIncome } = useBudget();
 const { selectedProfile, loadSelectedProfile } = useProfiles();
 
 const data = ref<{
@@ -65,6 +65,8 @@ function getExpensesByCategory(categoryId: string) {
 
 const showAddExpense = ref(false);
 const showAddIncome = ref(false);
+const showEditExpense = ref(false);
+const selectedExpense = ref<any>(null);
 
 const expandedCategories = ref<Set<string>>(new Set());
 const expensesExpanded = ref(false);
@@ -125,6 +127,45 @@ async function handleAddIncome() {
     await loadData();
   } catch (error) {
     console.error("Failed to create income", error);
+  }
+}
+
+function openEditExpense(expense: any) {
+  selectedExpense.value = {
+    ...expense,
+    date: new Date(expense.date).toISOString().split('T')[0],
+  };
+  showEditExpense.value = true;
+}
+
+async function handleUpdateExpense() {
+  if (!selectedExpense.value) return;
+  try {
+    const day = selectedExpense.value.date?.split('-')[2] || '01';
+    await updateExpense(selectedExpense.value.id, {
+      description: selectedExpense.value.description,
+      amount: selectedExpense.value.amount,
+      categoryId: selectedExpense.value.categoryId,
+      date: new Date(`${year}-${month.toString().padStart(2, '0')}-${day}`).toISOString(),
+    });
+    showEditExpense.value = false;
+    selectedExpense.value = null;
+    await loadData();
+  } catch (error) {
+    console.error("Failed to update expense", error);
+  }
+}
+
+async function handleDeleteExpense() {
+  if (!selectedExpense.value) return;
+  if (!confirm('Supprimer cette dépense ?')) return;
+  try {
+    await deleteExpense(selectedExpense.value.id);
+    showEditExpense.value = false;
+    selectedExpense.value = null;
+    await loadData();
+  } catch (error) {
+    console.error("Failed to delete expense", error);
   }
 }
 
@@ -266,14 +307,15 @@ async function handleAddIncome() {
                   </button>
 
                   <div v-if="isCategoryExpanded(category.id)" class="px-3 sm:px-4 pb-3 space-y-1.5 sm:space-y-2 border-t border-white/10 pt-2">
-                    <div
+                    <button
                       v-for="expense in getExpensesByCategory(category.id)"
                       :key="expense.id"
-                      class="flex items-center justify-between text-xs sm:text-sm"
+                      @click="openEditExpense(expense)"
+                      class="w-full flex items-center justify-between text-xs sm:text-sm py-2 px-2 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors"
                     >
                       <span class="text-slate-400">{{ expense.description }}</span>
                       <span class="font-semibold text-rose-400">-{{ expense.amount.toFixed(2) }} €</span>
-                    </div>
+                    </button>
                   </div>
                 </div>
 
@@ -287,8 +329,8 @@ async function handleAddIncome() {
       </div>
     </div>
 
-    <div v-if="showAddExpense" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 sm:p-6" @click.self="showAddExpense = false">
-      <div class="w-full max-w-md rounded-2xl backdrop-blur-xl bg-slate-900/95 border border-white/10 p-4 sm:p-6 shadow-2xl">
+    <div v-if="showAddExpense" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showAddExpense = false">
+      <div class="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl backdrop-blur-xl bg-white/5 border-t sm:border border-white/10 p-5 sm:p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
         <h3 class="mb-4 text-lg sm:text-xl font-bold text-rose-300">Nouvelle dépense</h3>
         <form @submit.prevent="handleAddExpense" class="space-y-3 sm:space-y-4">
           <div>
@@ -318,8 +360,8 @@ async function handleAddIncome() {
       </div>
     </div>
 
-    <div v-if="showAddIncome" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 sm:p-6" @click.self="showAddIncome = false">
-      <div class="w-full max-w-md rounded-2xl backdrop-blur-xl bg-slate-900/95 border border-white/10 p-4 sm:p-6 shadow-2xl">
+    <div v-if="showAddIncome" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showAddIncome = false">
+      <div class="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl backdrop-blur-xl bg-white/5 border-t sm:border border-white/10 p-5 sm:p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
         <h3 class="mb-4 text-lg sm:text-xl font-bold text-emerald-300">Nouveau revenu</h3>
         <form @submit.prevent="handleAddIncome" class="space-y-3 sm:space-y-4">
           <div>
@@ -335,6 +377,47 @@ async function handleAddIncome() {
               Créer
             </button>
             <button type="button" @click="showAddIncome = false" class="flex-1 rounded-lg bg-white/10 border border-white/20 py-2 text-sm sm:text-base font-semibold text-slate-300 transition-all active:scale-95">
+              Annuler
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div v-if="showEditExpense && selectedExpense" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showEditExpense = false">
+      <div class="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl backdrop-blur-xl bg-white/5 border-t sm:border border-white/10 p-5 sm:p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg sm:text-xl font-bold text-rose-300">Modifier la dépense</h3>
+          <button @click="showEditExpense = false" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <form @submit.prevent="handleUpdateExpense" class="space-y-4">
+          <div>
+            <label class="text-sm font-medium text-slate-300">Description</label>
+            <input v-model="selectedExpense.description" required class="mt-1.5 w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-base text-white placeholder-slate-500 focus:border-rose-400 focus:outline-none" />
+          </div>
+          <div>
+            <label class="text-sm font-medium text-slate-300">Montant (€)</label>
+            <input v-model.number="selectedExpense.amount" type="number" step="0.01" required class="mt-1.5 w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-base text-white placeholder-slate-500 focus:border-rose-400 focus:outline-none" />
+          </div>
+          <div>
+            <label class="text-sm font-medium text-slate-300">Catégorie</label>
+            <select v-model="selectedExpense.categoryId" required class="mt-1.5 w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-base text-white focus:border-rose-400 focus:outline-none">
+              <option value="" disabled class="bg-slate-800">Sélectionner une catégorie</option>
+              <option v-for="cat in expenseCategories" :key="cat.id" :value="cat.id" class="bg-slate-800">{{ cat.name }}</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-2 pt-2">
+            <button type="submit" class="w-full rounded-lg bg-linear-to-r from-rose-600 to-red-600 py-3 text-base font-semibold text-white transition-all active:scale-95">
+              Enregistrer
+            </button>
+            <button type="button" @click="handleDeleteExpense" class="w-full rounded-lg bg-red-600/20 border border-red-500/30 py-3 text-base font-semibold text-red-400 transition-all active:scale-95">
+              Supprimer
+            </button>
+            <button type="button" @click="showEditExpense = false" class="w-full rounded-lg bg-white/10 border border-white/20 py-3 text-base font-semibold text-slate-300 transition-all active:scale-95">
               Annuler
             </button>
           </div>

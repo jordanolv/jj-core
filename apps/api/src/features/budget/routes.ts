@@ -54,22 +54,22 @@ router.get("/years/:year/months/:month", async (c) => {
 
   return c.json({
     expenses: expensesList.map((e) => ({
-      id: e._id,
-      categoryId: e.categoryId,
+      id: e._id?.toString(),
+      categoryId: e.categoryId?.toString(),
       description: e.description,
       amount: e.amount,
       date: e.date,
-      subscriptionId: e.subscriptionId,
+      subscriptionId: e.subscriptionId?.toString(),
     })),
     incomes: incomesList.map((i) => ({
-      id: i._id,
-      categoryId: i.categoryId,
+      id: i._id?.toString(),
+      categoryId: i.categoryId?.toString(),
       description: i.description,
       amount: i.amount,
       date: i.date,
     })),
     categories: categoriesList.map((c) => ({
-      id: c._id,
+      id: c._id?.toString(),
       name: c.name,
       type: c.type,
       color: c.color,
@@ -110,6 +110,58 @@ router.post("/expenses", async (c) => {
   });
 
   return c.json({ id: result.insertedId }, 201);
+});
+
+const updateExpenseSchema = z.object({
+  categoryId: z.string().optional(),
+  description: z.string().min(1).optional(),
+  amount: z.number().positive().optional(),
+  date: z.string().datetime().optional(),
+});
+
+router.patch("/expenses/:id", async (c) => {
+  const profileId = c.get("profileId");
+  const id = c.req.param("id");
+  const body = await c.req.json();
+  const parsed = updateExpenseSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.flatten() }, 400);
+  }
+
+  const { expenses } = await budgetCollections();
+  const updateData: any = {
+    updatedAt: new Date(),
+  };
+
+  if (parsed.data.categoryId !== undefined) {
+    updateData.categoryId = parsed.data.categoryId ? new ObjectId(parsed.data.categoryId) : undefined;
+  }
+  if (parsed.data.description) updateData.description = parsed.data.description;
+  if (parsed.data.amount) updateData.amount = parsed.data.amount;
+  if (parsed.data.date) {
+    const date = new Date(parsed.data.date);
+    updateData.date = date;
+    updateData.year = date.getFullYear();
+    updateData.month = date.getMonth() + 1;
+  }
+
+  await expenses.updateOne(
+    { _id: new ObjectId(id), profileId },
+    { $set: updateData }
+  );
+
+  return c.json({ success: true });
+});
+
+router.delete("/expenses/:id", async (c) => {
+  const profileId = c.get("profileId");
+  const id = c.req.param("id");
+  const { expenses } = await budgetCollections();
+
+  await expenses.deleteOne({ _id: new ObjectId(id), profileId });
+
+  return c.json({ success: true });
 });
 
 const createIncomeSchema = z.object({

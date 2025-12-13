@@ -55,6 +55,30 @@ export function useBudget() {
     return response;
   }
 
+  async function updateExpense(id: string, data: {
+    categoryId?: string;
+    description?: string;
+    amount?: number;
+    date?: string;
+  }) {
+    const response = await $fetch<{ success: boolean }>(`${BASE_URL}/expenses/${id}`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: data,
+      credentials: "include",
+    });
+    return response;
+  }
+
+  async function deleteExpense(id: string) {
+    const response = await $fetch<{ success: boolean }>(`${BASE_URL}/expenses/${id}`, {
+      method: "DELETE",
+      headers: getHeaders(),
+      credentials: "include",
+    });
+    return response;
+  }
+
   async function createIncome(data: {
     categoryId?: string;
     description: string;
@@ -154,6 +178,8 @@ export function useBudget() {
     getMonths,
     getMonthDetails,
     createExpense,
+    updateExpense,
+    deleteExpense,
     createIncome,
     getGlobalCategories,
     createGlobalCategory,

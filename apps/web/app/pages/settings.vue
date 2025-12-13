@@ -5,6 +5,13 @@ definePageMeta({
 
 const settingsItems = [
   {
+    name: 'Fonctionnalités',
+    description: 'Gérer les catégories et options',
+    icon: '⚙️',
+    route: '/settings/features',
+    gradient: 'from-purple-500 to-pink-600'
+  },
+  {
     name: 'Notifications',
     description: 'Gérer les notifications push',
     icon: '🔔',
@@ -56,34 +63,8 @@ function handleItemClick(item: any) {
 
       <!-- Settings List -->
       <div class="space-y-1">
-        <NuxtLink
-          v-for="item in settingsItems.filter(i => i.route !== '#' && !i.action)"
-          :key="item.name"
-          :to="item.route"
-          class="w-full group flex items-center gap-3 px-4 py-3 rounded-xl transition-all active:bg-white/5 sm:hover:bg-white/5"
-        >
-          <!-- Icon avec gradient -->
-          <div
-            class="w-12 h-12 rounded-full bg-linear-to-br flex items-center justify-center text-xl shrink-0 shadow-lg"
-            :class="item.gradient"
-          >
-            {{ item.icon }}
-          </div>
-
-          <!-- Info -->
-          <div class="flex-1 text-left min-w-0">
-            <h3 class="text-base font-semibold text-white">{{ item.name }}</h3>
-            <p class="text-xs text-slate-400">{{ item.description }}</p>
-          </div>
-
-          <!-- Arrow -->
-          <svg class="w-5 h-5 text-slate-400 group-hover:text-white transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </NuxtLink>
-
         <button
-          v-for="item in settingsItems.filter(i => i.route === '#' || i.action)"
+          v-for="item in settingsItems"
           :key="item.name"
           @click="handleItemClick(item)"
           class="w-full group flex items-center gap-3 px-4 py-3 rounded-xl transition-all active:bg-white/5 sm:hover:bg-white/5"

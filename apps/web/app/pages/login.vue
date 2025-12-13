@@ -36,62 +36,55 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center p-4">
-    <section class="w-full max-w-md backdrop-blur-xl bg-white/10 border border-white/20 shadow-xl rounded-2xl p-6">
-      <header class="mb-6 space-y-1">
-        <p class="text-sm font-semibold uppercase tracking-wide text-slate-300">
-          JJ Core
-        </p>
-        <h1 class="text-2xl font-bold text-white">Connexion</h1>
-        <p class="text-sm text-slate-300">
-          Entrez votre email et votre mot de passe pour accéder au tableau de bord.
-        </p>
+  <div class="min-h-screen flex items-center justify-center px-4 pb-4 sm:px-6 sm:pb-6">
+    <section class="w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8">
+      <header class="mb-6 sm:mb-8 text-center">
+        <h1 class="text-3xl sm:text-4xl font-bold text-purple-300">JJ Core</h1>
+        <p class="mt-2 text-slate-400">Connectez-vous pour continuer</p>
       </header>
 
-      <form class="space-y-5" @submit.prevent="handleSubmit">
-        <div class="space-y-2">
-          <label for="email" class="text-sm font-medium text-white">Email</label>
+      <form class="space-y-4 sm:space-y-5" @submit.prevent="handleSubmit">
+        <div>
+          <label for="email" class="text-sm font-medium text-slate-300">Email</label>
           <input
             id="email"
             v-model="form.email"
             type="email"
             required
-            class="w-full rounded-lg bg-white/5 border border-white/20 px-4 py-2.5 text-white shadow-sm focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 placeholder:text-slate-400"
+            class="mt-1.5 w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white placeholder-slate-500 focus:border-purple-400 focus:outline-none"
             placeholder="jordan@jj-core.app"
           />
         </div>
 
-        <div class="space-y-2">
-          <label for="password" class="text-sm font-medium text-white"
-            >Mot de passe</label
-          >
+        <div>
+          <label for="password" class="text-sm font-medium text-slate-300">Mot de passe</label>
           <input
             id="password"
             v-model="form.password"
             type="password"
             minlength="6"
             required
-            class="w-full rounded-lg bg-white/5 border border-white/20 px-4 py-2.5 text-white shadow-sm focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 placeholder:text-slate-400"
+            class="mt-1.5 w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white placeholder-slate-500 focus:border-purple-400 focus:outline-none"
             placeholder="••••••••"
           />
         </div>
 
-        <p v-if="state.error" class="rounded-lg bg-red-500/20 border border-red-400/30 px-3 py-2 text-sm text-red-300">
+        <p v-if="state.error" class="rounded-lg bg-red-500/20 border border-red-400/30 px-4 py-3 text-sm text-red-300">
           {{ state.error }}
         </p>
 
         <button
           type="submit"
-          class="w-full rounded-lg bg-gradient-to-r from-emerald-400 to-teal-400 px-4 py-2.5 font-semibold text-white shadow-md transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+          class="w-full rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 text-base font-semibold text-white transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
           :disabled="state.loading"
         >
           <span v-if="state.loading">Connexion...</span>
           <span v-else>Se connecter</span>
         </button>
 
-        <p class="text-center text-sm text-slate-300">
+        <p class="text-center text-sm text-slate-400">
           Pas encore de compte ?
-          <NuxtLink to="/register" class="font-semibold text-white hover:underline">
+          <NuxtLink to="/register" class="font-semibold text-purple-300 hover:text-white transition-colors">
             Créer un compte
           </NuxtLink>
         </p>
