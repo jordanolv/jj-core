@@ -166,7 +166,7 @@ router.get("/global-categories", async (c) => {
 
 const createGlobalCategorySchema = z.object({
   name: z.string().min(1),
-  type: z.enum(["income", "expense"]),
+  type: z.enum(["expense"]),
   color: z.string().optional(),
   icon: z.string().optional(),
 });
