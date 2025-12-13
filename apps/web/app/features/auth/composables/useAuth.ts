@@ -14,10 +14,10 @@ interface RegisterPayload {
 export function useAuth() {
   if (import.meta.server) {
     return {
-      session: ref({ data: null, isPending: true }),
+      session: ref({ data: null, isPending: false }),
       user: computed(() => null),
       isAuthenticated: computed(() => false),
-      isPending: computed(() => true),
+      isPending: computed(() => false),
       login: async () => {},
       register: async () => {},
       logout: async () => {},
@@ -27,7 +27,7 @@ export function useAuth() {
   const authClient = useAuthClient();
   const session = authClient.useSession();
   const isAuthenticated = computed(() => session.value?.data !== null);
-  const isPending = computed(() => session.value?.isPending ?? true);
+  const isPending = computed(() => session.value?.isPending ?? false);
 
   async function login(payload: LoginPayload) {
     const result = await authClient.signIn.email(payload);
