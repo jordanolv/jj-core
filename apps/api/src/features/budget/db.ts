@@ -12,20 +12,6 @@ export interface GlobalCategoryDocument {
   updatedAt: Date;
 }
 
-export interface MonthCategoryDocument {
-  _id?: ObjectId;
-  profileId: string;
-  year: number;
-  month: number;
-  globalCategoryId?: ObjectId;
-  name: string;
-  type: "income" | "expense";
-  color?: string;
-  icon?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface ExpenseDocument {
   _id?: ObjectId;
   profileId: string;
@@ -72,7 +58,6 @@ export async function budgetCollections() {
 
   return {
     globalCategories: db.collection<GlobalCategoryDocument>("budget_global_categories"),
-    monthCategories: db.collection<MonthCategoryDocument>("budget_month_categories"),
     expenses: db.collection<ExpenseDocument>("budget_expenses"),
     incomes: db.collection<IncomeDocument>("budget_incomes"),
     subscriptions: db.collection<SubscriptionDocument>("budget_subscriptions"),

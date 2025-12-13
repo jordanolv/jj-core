@@ -44,35 +44,12 @@ router.get("/years/:year/months/:month", async (c) => {
   const profileId = c.get("profileId");
   const year = parseInt(c.req.param("year"));
   const month = parseInt(c.req.param("month"));
-  const { expenses, incomes, monthCategories, globalCategories } = await budgetCollections();
+  const { expenses, incomes, globalCategories } = await budgetCollections();
 
-  let categoriesList = await monthCategories.find({ profileId, year, month }).toArray();
-
-  if (categoriesList.length === 0) {
-    const globals = await globalCategories.find({ profileId }).toArray();
-    const now = new Date();
-
-    for (const global of globals) {
-      await monthCategories.insertOne({
-        profileId,
-        year,
-        month,
-        globalCategoryId: global._id,
-        name: global.name,
-        type: global.type,
-        color: global.color,
-        icon: global.icon,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
-
-    categoriesList = await monthCategories.find({ profileId, year, month }).toArray();
-  }
-
-  const [expensesList, incomesList] = await Promise.all([
+  const [expensesList, incomesList, categoriesList] = await Promise.all([
     expenses.find({ profileId, year, month }).toArray(),
     incomes.find({ profileId, year, month }).toArray(),
+    globalCategories.find({ profileId }).toArray(),
   ]);
 
   return c.json({
@@ -169,40 +146,6 @@ router.post("/incomes", async (c) => {
   return c.json({ id: result.insertedId }, 201);
 });
 
-const createCategorySchema = z.object({
-  name: z.string().min(1),
-  type: z.enum(["income", "expense"]),
-  year: z.number(),
-  month: z.number(),
-  color: z.string().optional(),
-  icon: z.string().optional(),
-});
-
-router.post("/categories", async (c) => {
-  const profileId = c.get("profileId");
-  const body = await c.req.json();
-  const parsed = createCategorySchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.flatten() }, 400);
-  }
-
-  const { monthCategories } = await budgetCollections();
-
-  const result = await monthCategories.insertOne({
-    profileId,
-    year: parsed.data.year,
-    month: parsed.data.month,
-    name: parsed.data.name,
-    type: parsed.data.type,
-    color: parsed.data.color,
-    icon: parsed.data.icon,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-
-  return c.json({ id: result.insertedId }, 201);
-});
 
 router.get("/global-categories", async (c) => {
   const profileId = c.get("profileId");

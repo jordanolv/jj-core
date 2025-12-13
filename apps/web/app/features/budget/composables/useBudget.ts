@@ -70,23 +70,6 @@ export function useBudget() {
     return response;
   }
 
-  async function createCategory(data: {
-    name: string;
-    type: "income" | "expense";
-    year: number;
-    month: number;
-    color?: string;
-    icon?: string;
-  }) {
-    const response = await $fetch<{ id: string }>(`${BASE_URL}/categories`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: data,
-      credentials: "include",
-    });
-    return response;
-  }
-
   async function getGlobalCategories() {
     const response = await $fetch<{ categories: any[] }>(`${BASE_URL}/global-categories`, {
       headers: getHeaders(),
@@ -172,7 +155,6 @@ export function useBudget() {
     getMonthDetails,
     createExpense,
     createIncome,
-    createCategory,
     getGlobalCategories,
     createGlobalCategory,
     getSubscriptions,
