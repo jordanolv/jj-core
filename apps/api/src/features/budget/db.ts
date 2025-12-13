@@ -5,7 +5,7 @@ export interface GlobalCategoryDocument {
   _id?: ObjectId;
   profileId: string;
   name: string;
-  type: "income" | "expense";
+  type: "expense";
   color?: string;
   icon?: string;
   createdAt: Date;
