@@ -339,7 +339,7 @@ async function handleDeleteExpense() {
           </div>
           <div>
             <label class="text-xs sm:text-sm font-medium text-slate-300">Montant (€)</label>
-            <input v-model.number="newExpense.amount" type="number" step="0.01" required class="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 sm:px-4 py-2 text-sm sm:text-base text-white placeholder-slate-500 focus:border-rose-400 focus:outline-none" />
+            <input v-model.number="newExpense.amount" type="number" step="0.01" inputmode="decimal" required class="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 sm:px-4 py-2 text-sm sm:text-base text-white placeholder-slate-500 focus:border-rose-400 focus:outline-none" placeholder="0.00" />
           </div>
           <div>
             <label class="text-xs sm:text-sm font-medium text-slate-300">Catégorie <span class="text-rose-400">*</span></label>
@@ -370,7 +370,7 @@ async function handleDeleteExpense() {
           </div>
           <div>
             <label class="text-xs sm:text-sm font-medium text-slate-300">Montant (€)</label>
-            <input v-model.number="newIncome.amount" type="number" step="0.01" required class="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 sm:px-4 py-2 text-sm sm:text-base text-white placeholder-slate-500 focus:border-emerald-400 focus:outline-none" />
+            <input v-model.number="newIncome.amount" type="number" step="0.01" inputmode="decimal" required class="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 sm:px-4 py-2 text-sm sm:text-base text-white placeholder-slate-500 focus:border-emerald-400 focus:outline-none" placeholder="0.00" />
           </div>
           <div class="flex gap-2 sm:gap-3 pt-2">
             <button type="submit" class="flex-1 rounded-lg bg-linear-to-r from-emerald-600 to-green-600 py-2 text-sm sm:text-base font-semibold text-white transition-all active:scale-95">
@@ -401,7 +401,7 @@ async function handleDeleteExpense() {
           </div>
           <div>
             <label class="text-sm font-medium text-slate-300">Montant (€)</label>
-            <input v-model.number="selectedExpense.amount" type="number" step="0.01" required class="mt-1.5 w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-base text-white placeholder-slate-500 focus:border-rose-400 focus:outline-none" />
+            <input v-model.number="selectedExpense.amount" type="number" step="0.01" inputmode="decimal" required class="mt-1.5 w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-base text-white placeholder-slate-500 focus:border-rose-400 focus:outline-none" />
           </div>
           <div>
             <label class="text-sm font-medium text-slate-300">Catégorie</label>
