@@ -4,6 +4,8 @@ import { useProfiles } from "../../features/profiles/composables/useProfiles";
 
 definePageMeta({
   middleware: ["authenticated"],
+  pageTitle: "Budget",
+  pageDescription: "Personnalisez vos catégories",
 });
 
 const { getGlobalCategories, createGlobalCategory } = useBudget();
@@ -67,16 +69,6 @@ const availableIcons = ["💰", "🏠", "🍔", "🚗", "⚡", "🎮", "📱", "
 <template>
   <div class="px-4 pb-4 sm:px-6 sm:pb-6">
     <div class="mx-auto max-w-4xl">
-      <header class="mb-6">
-        <NuxtLink to="/settings" class="mb-3 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          Retour aux paramètres
-        </NuxtLink>
-        <h1 class="text-2xl sm:text-3xl font-bold text-purple-300">Fonctionnalités</h1>
-        <p class="text-sm text-slate-400 mt-1">Personnalisez vos fonctionnalités</p>
-      </header>
 
       <!-- Tabs -->
       <div class="mb-6 flex gap-2 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-1">

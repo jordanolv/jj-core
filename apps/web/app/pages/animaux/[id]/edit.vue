@@ -3,6 +3,7 @@ import { useAnimaux, type Garde } from "../../../features/animaux/composables/us
 
 definePageMeta({
   middleware: ["authenticated"],
+  pageTitle: "Éditer la garde",
 });
 
 const route = useRoute();
@@ -104,17 +105,6 @@ function goBack() {
       </div>
 
       <template v-else>
-        <!-- Header -->
-        <div class="mb-6">
-          <button
-            @click="goBack"
-            class="mb-4 px-3 py-2 rounded-lg backdrop-blur-xl bg-white/10 border border-white/20 text-white text-sm transition-all hover:bg-white/15"
-          >
-            ← Retour
-          </button>
-          <h1 class="text-2xl font-bold text-white">Éditer la garde</h1>
-          <p class="text-sm text-slate-300 mt-1">Modifiez les informations de la garde</p>
-        </div>
 
         <!-- Form -->
         <form @submit.prevent="handleSubmit" class="space-y-4">

@@ -164,15 +164,6 @@ export function useBudget() {
     return response;
   }
 
-  async function generateSubscriptionExpenses() {
-    const response = await $fetch<{ generated: number; expenses: any[] }>(`${BASE_URL}/subscriptions/generate`, {
-      method: "POST",
-      headers: getHeaders(),
-      credentials: "include",
-    });
-    return response;
-  }
-
   return {
     getYears,
     getMonths,
@@ -187,7 +178,6 @@ export function useBudget() {
     createSubscription,
     deleteSubscription,
     convertExpenseToSubscription,
-    generateSubscriptionExpenses,
   };
 }
 

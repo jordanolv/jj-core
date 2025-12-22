@@ -10,6 +10,14 @@ const route = useRoute();
 const year = parseInt(route.params.year as string);
 const month = parseInt(route.params.month as string);
 
+const monthNames = [
+  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+];
+
+// Update page title dynamically
+route.meta.pageTitle = `${monthNames[month - 1]} ${year}`;
+
 const { getMonthDetails, createExpense, updateExpense, deleteExpense, createIncome } = useBudget();
 const { selectedProfile, loadSelectedProfile } = useProfiles();
 
@@ -19,11 +27,6 @@ const data = ref<{
   categories: any[];
 } | null>(null);
 const loading = ref(true);
-
-const monthNames = [
-  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
-];
 
 async function loadData() {
   loading.value = true;
@@ -174,15 +177,6 @@ async function handleDeleteExpense() {
 <template>
   <div class="px-4 pb-4 sm:px-6 sm:pb-6">
     <div class="mx-auto max-w-6xl">
-      <header class="mb-6">
-        <NuxtLink to="/budget" class="mb-3 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          Retour
-        </NuxtLink>
-        <h1 class="text-2xl sm:text-3xl font-bold text-purple-300">{{ monthNames[month - 1] }} {{ year }}</h1>
-      </header>
 
       <div v-if="loading" class="flex justify-center py-12">
         <div class="h-10 w-10 sm:h-12 sm:w-12 animate-spin rounded-full border-4 border-purple-300 border-t-purple-600"></div>

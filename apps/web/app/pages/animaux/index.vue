@@ -4,6 +4,8 @@ import { useProfiles } from "../../features/profiles/composables/useProfiles";
 
 definePageMeta({
   middleware: ["authenticated"],
+  pageTitle: "Animaux",
+  pageDescription: "Suivi des animaux",
 });
 
 const { getGardes, updateGarde, deleteGarde } = useAnimaux();
@@ -119,12 +121,8 @@ function navigateToEdit(id: string) {
 <template>
   <div class="px-4 pb-4 sm:px-6 sm:pb-6">
     <div class="mx-auto max-w-2xl">
-      <!-- Header with actions -->
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h1 class="text-2xl font-bold text-white">Gardes d'animaux</h1>
-          <p class="text-sm text-slate-300 mt-1">Gérez vos gardes d'animaux</p>
-        </div>
+      <!-- Add garde button -->
+      <div class="flex justify-end mb-6">
         <button
           @click="navigateToNew"
           class="px-4 py-2 rounded-lg bg-gradient-to-r from-rose-400 to-pink-400 text-white font-semibold shadow-md transition-all active:scale-95"

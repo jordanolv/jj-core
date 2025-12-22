@@ -4,6 +4,8 @@ import { useProfiles } from "../../features/profiles/composables/useProfiles";
 
 definePageMeta({
   middleware: ["authenticated"],
+  pageTitle: "Nouvelle garde",
+  pageDescription: "Créez une nouvelle garde d'animal",
 });
 
 const { createGarde } = useAnimaux();
@@ -69,17 +71,6 @@ function goBack() {
 <template>
   <div class="px-4 pb-4 sm:px-6 sm:pb-6">
     <div class="mx-auto max-w-2xl">
-      <!-- Header -->
-      <div class="mb-6">
-        <button
-          @click="goBack"
-          class="mb-4 px-3 py-2 rounded-lg backdrop-blur-xl bg-white/10 border border-white/20 text-white text-sm transition-all hover:bg-white/15"
-        >
-          ← Retour
-        </button>
-        <h1 class="text-2xl font-bold text-white">Nouvelle garde</h1>
-        <p class="text-sm text-slate-300 mt-1">Créez une nouvelle garde d'animal</p>
-      </div>
 
       <!-- Form -->
       <form @submit.prevent="handleSubmit" class="space-y-4">

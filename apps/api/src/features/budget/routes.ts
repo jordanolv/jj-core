@@ -281,8 +281,24 @@ router.post("/subscriptions", async (c) => {
     return c.json({ error: parsed.error.flatten() }, 400);
   }
 
-  const { subscriptions } = await budgetCollections();
+  const { subscriptions, globalCategories, expenses } = await budgetCollections();
   const startDate = new Date(parsed.data.startDate);
+
+  let subscriptionCategoryId = await globalCategories.findOne({
+    profileId,
+    name: "Abonnements",
+  }).then((cat) => cat?._id);
+
+  if (!subscriptionCategoryId) {
+    const categoryResult = await globalCategories.insertOne({
+      profileId,
+      name: "Abonnements",
+      type: "expense",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    subscriptionCategoryId = categoryResult.insertedId;
+  }
 
   const result = await subscriptions.insertOne({
     profileId,
@@ -295,6 +311,47 @@ router.post("/subscriptions", async (c) => {
     createdAt: new Date(),
     updatedAt: new Date(),
   });
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const startYear = startDate.getFullYear();
+  const startMonth = startDate.getMonth() + 1;
+
+  for (let year = startYear; year <= currentYear; year++) {
+    const monthStart = year === startYear ? startMonth : 1;
+    const monthEnd = year === currentYear ? currentMonth : 12;
+
+    for (let month = monthStart; month <= monthEnd; month++) {
+      const shouldGenerate =
+        parsed.data.frequency === "monthly" ||
+        (parsed.data.frequency === "yearly" && month === startMonth);
+
+      if (!shouldGenerate) continue;
+
+      const existingExpense = await expenses.findOne({
+        profileId,
+        subscriptionId: result.insertedId,
+        year,
+        month,
+      });
+
+      if (existingExpense) continue;
+
+      await expenses.insertOne({
+        profileId,
+        categoryId: subscriptionCategoryId,
+        description: `${parsed.data.name} (abonnement)`,
+        amount: parsed.data.amount,
+        year,
+        month,
+        date: new Date(year, month - 1, startDate.getDate()),
+        subscriptionId: result.insertedId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+  }
 
   return c.json({ id: result.insertedId }, 201);
 });

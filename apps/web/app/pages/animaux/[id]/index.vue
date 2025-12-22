@@ -3,6 +3,7 @@ import { useAnimaux, type Garde } from "../../../features/animaux/composables/us
 
 definePageMeta({
   middleware: ["authenticated"],
+  pageTitle: "Détail de la garde",
 });
 
 const route = useRoute();
@@ -100,13 +101,7 @@ function navigateToEdit() {
       <!-- Content -->
       <div v-else class="space-y-4">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-          <button
-            @click="goBack"
-            class="px-3 py-2 rounded-lg backdrop-blur-xl bg-white/10 border border-white/20 text-white text-sm transition-all hover:bg-white/15"
-          >
-            ← Retour
-          </button>
+        <div class="flex justify-end mb-6">
           <button
             @click="navigateToEdit"
             class="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-400 to-indigo-400 text-white font-semibold shadow-md transition-all active:scale-95"

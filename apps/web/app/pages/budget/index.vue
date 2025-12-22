@@ -4,18 +4,35 @@ import { useProfiles } from "../../features/profiles/composables/useProfiles";
 
 definePageMeta({
   middleware: ["authenticated"],
+  pageTitle: "Budget",
+  pageDescription: "Gérer vos finances",
 });
 
 const { getYears, getMonths, getMonthDetails } = useBudget();
 const { selectedProfile, loadSelectedProfile } = useProfiles();
 
 const currentYear = new Date().getFullYear();
+const currentMonth = new Date().getMonth() + 1;
 const selectedYear = ref(currentYear);
 const availableYears = ref<number[]>([]);
 const months = ref<number[]>([]);
 const monthBalances = ref<Record<number, number>>({});
 const monthExpenses = ref<Record<number, any[]>>({});
 const loading = ref(true);
+
+const sortedMonths = computed(() => {
+  if (selectedYear.value === currentYear) {
+    const monthsArray = [];
+    for (let i = currentMonth; i <= 12; i++) {
+      monthsArray.push(i);
+    }
+    for (let i = 1; i < currentMonth; i++) {
+      monthsArray.push(i);
+    }
+    return monthsArray;
+  }
+  return Array.from({ length: 12 }, (_, i) => i + 1);
+});
 
 const monthNames = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -194,7 +211,14 @@ function getMonthColors(month: number): string[] {
 
         <!-- Liste style crypto -->
         <div v-else class="space-y-1">
-        <template v-for="month in 12" :key="month">
+        <template v-for="month in sortedMonths" :key="month">
+          <div
+            v-if="selectedYear === currentYear && month === 1"
+            class="py-2"
+          >
+            <div class="h-px bg-linear-to-r from-transparent via-slate-700 to-transparent"></div>
+          </div>
+
           <NuxtLink
             v-if="months.includes(month)"
             :to="`/budget/${selectedYear}/${month}`"
@@ -204,7 +228,7 @@ function getMonthColors(month: number): string[] {
             <div class="min-w-0 flex gap-3">
               <div
                 class="w-10 h-10 rounded-full bg-linear-to-br flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-lg"
-                :class="getMonthGradient(month)"
+                :class="month === currentMonth && selectedYear === currentYear ? getMonthGradient(month) : 'from-slate-400 to-slate-600'"
               >
                 {{ month.toString().padStart(2, '0') }}
               </div>
@@ -226,8 +250,14 @@ function getMonthColors(month: number): string[] {
             >
               <defs>
                 <linearGradient :id="`gradient-${month}`" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" :stop-color="getMonthColors(month)[0]" />
-                  <stop offset="100%" :stop-color="getMonthColors(month)[1]" />
+                  <stop
+                    offset="0%"
+                    :stop-color="month === currentMonth && selectedYear === currentYear ? getMonthColors(month)[0] : '#94a3b8'"
+                  />
+                  <stop
+                    offset="100%"
+                    :stop-color="month === currentMonth && selectedYear === currentYear ? getMonthColors(month)[1] : '#475569'"
+                  />
                 </linearGradient>
               </defs>
               <path :d="generateSparkline(month)" :stroke="`url(#gradient-${month})`" />

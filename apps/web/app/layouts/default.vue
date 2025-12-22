@@ -1,32 +1,10 @@
 <script setup lang="ts">
-// ThemeToggle is auto-imported from app/components/
-// No import needed - Nuxt auto-imports components
+const { features } = useAppFeatures();
+const { defaultNavItems, getIcon } = useNavigation();
+const route = useRoute();
 
 const showFeatureSwitcher = ref(false);
-
-const features = [
-  {
-    name: 'Budget',
-    description: 'Gérer vos finances',
-    icon: '💰',
-    route: '/budget',
-    gradient: 'from-emerald-500 to-green-600'
-  },
-  {
-    name: 'Animaux',
-    description: 'Suivi des animaux',
-    icon: '🐾',
-    route: '/animaux',
-    gradient: 'from-orange-500 to-amber-600'
-  },
-  {
-    name: 'Cuisine',
-    description: 'Recettes et repas',
-    icon: '🍳',
-    route: '/cuisine',
-    gradient: 'from-rose-500 to-pink-600'
-  }
-];
+const navItems = ref(defaultNavItems);
 
 function toggleSwitcher() {
   showFeatureSwitcher.value = !showFeatureSwitcher.value;
@@ -37,25 +15,61 @@ function navigateToFeature(route: string) {
   navigateTo(route);
 }
 
+function handleNavClick(item: any) {
+  if (item.type === 'action' && item.id === 'features') {
+    toggleSwitcher();
+  }
+}
+
+function loadNavigationItems() {
+  const saved = localStorage.getItem('navigation-items');
+  if (saved) {
+    try {
+      navItems.value = JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to parse navigation items', e);
+    }
+  }
+}
+
 // Force dark mode
 onMounted(() => {
   document.documentElement.classList.add('dark');
+
+  loadNavigationItems();
+
+  // Listen for storage changes from other tabs/windows
+  const handleStorageChange = (e: StorageEvent) => {
+    if (e.key === 'navigation-items') {
+      loadNavigationItems();
+    }
+  };
+
+  // Listen for custom event from same tab
+  const handleNavigationUpdate = () => {
+    loadNavigationItems();
+  };
 
   const handleEscape = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       showFeatureSwitcher.value = false;
     }
   };
+
   window.addEventListener('keydown', handleEscape);
+  window.addEventListener('storage', handleStorageChange);
+  window.addEventListener('navigation-updated', handleNavigationUpdate);
+
   onUnmounted(() => {
     window.removeEventListener('keydown', handleEscape);
+    window.removeEventListener('storage', handleStorageChange);
+    window.removeEventListener('navigation-updated', handleNavigationUpdate);
   });
 });
 </script>
 
 <template>
   <div class="min-h-screen text-white relative bg-black overflow-hidden">
-    <!-- Effets de glow en arrière-plan (derrière tout) -->
     <div class="fixed inset-0 pointer-events-none z-0">
       <div class="absolute top-0 -left-40 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl"></div>
       <div class="absolute top-40 right-0 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
@@ -64,32 +78,50 @@ onMounted(() => {
 
     <!-- Contenu -->
     <div class="relative z-10">
-      <!-- Header global -->
-      <header class="sticky top-0 z-50 px-4 py-4 sm:px-6">
-        <div class="flex items-center justify-between">
-          <button
-            @click="toggleSwitcher"
-            class="w-12 h-12 rounded-full backdrop-blur-xl bg-white/10 border border-white/20 flex items-center justify-center active:scale-95 transition-all duration-300"
-          >
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <NuxtLink
-            to="/settings"
-            class="w-12 h-12 rounded-full backdrop-blur-xl bg-white/10 border border-white/20 flex items-center justify-center active:scale-95 transition-all duration-300"
-          >
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </NuxtLink>
-        </div>
-      </header>
-
-      <main class="w-full">
+      <main class="w-full pb-24">
+        <PageHeader
+          v-if="route.meta.pageTitle"
+          :title="route.meta.pageTitle as string"
+          :description="route.meta.pageDescription as string || ''"
+          @toggle-features="toggleSwitcher"
+        />
         <slot />
       </main>
+
+      <!-- Bottom Navigation -->
+      <nav class="fixed bottom-0 left-0 right-0 z-50 px-4 pb-3 sm:pb-4">
+        <div class="mx-auto max-w-md backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl">
+          <div class="flex items-center justify-around px-1 py-2">
+            <template v-for="item in navItems" :key="item.id">
+              <!-- Link items -->
+              <NuxtLink
+                v-if="item.type === 'link'"
+                :to="item.route"
+                class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all active:scale-95"
+                :class="$route.path === item.route || $route.path.startsWith(item.route + '/') ? 'text-white' : 'text-slate-400'"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIcon(item.icon)" />
+                </svg>
+                <span class="text-[10px] font-medium">{{ item.label }}</span>
+              </NuxtLink>
+
+              <!-- Action items -->
+              <button
+                v-else
+                @click="handleNavClick(item)"
+                class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all active:scale-95"
+                :class="(item.id === 'features' && showFeatureSwitcher) ? 'text-white' : 'text-slate-400'"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIcon(item.icon)" />
+                </svg>
+                <span class="text-[10px] font-medium">{{ item.label }}</span>
+              </button>
+            </template>
+          </div>
+        </div>
+      </nav>
     </div>
 
     <!-- Feature Switcher Modal -->

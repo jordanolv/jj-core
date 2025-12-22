@@ -4,10 +4,12 @@ import { useProfiles } from "../features/profiles/composables/useProfiles";
 
 definePageMeta({
   middleware: ["authenticated"],
+  pageTitle: "Home",
 });
 
 const auth = useAuth();
 const { selectedProfile, loadSelectedProfile } = useProfiles();
+const { features } = useAppFeatures();
 
 onMounted(() => {
   loadSelectedProfile();
@@ -15,30 +17,6 @@ onMounted(() => {
     navigateTo("/profiles");
   }
 });
-
-const features = [
-  {
-    name: "Budget",
-    description: "Gérez vos finances personnelles",
-    icon: "💰",
-    path: "/budget",
-    color: "from-green-500 to-emerald-600",
-  },
-  {
-    name: "Gardes",
-    description: "Suivez vos gardes d'animaux",
-    icon: "🐾",
-    path: "/gardes",
-    color: "from-blue-500 to-cyan-600",
-  },
-  {
-    name: "Recettes",
-    description: "Vos recettes de cuisine",
-    icon: "🍳",
-    path: "/recettes",
-    color: "from-orange-500 to-red-600",
-  },
-];
 </script>
 
 <template>
@@ -75,10 +53,10 @@ const features = [
         <NuxtLink
           v-for="feature in features"
           :key="feature.name"
-          :to="feature.path"
+          :to="feature.route"
           class="group relative overflow-hidden backdrop-blur-xl bg-white/40 dark:bg-white/5 border border-white/60 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl transition-all duration-300 active:scale-[0.98] sm:hover:shadow-2xl sm:hover:scale-[1.02] sm:hover:bg-white/60 dark:sm:hover:bg-white/10"
         >
-          <div class="absolute inset-0 bg-linear-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-10" :class="feature.color"></div>
+          <div class="absolute inset-0 bg-linear-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-10" :class="feature.gradient"></div>
           <div class="relative">
             <div class="mb-3 sm:mb-4 text-4xl sm:text-5xl transform transition-transform duration-300 group-hover:scale-110">{{ feature.icon }}</div>
             <h2 class="mb-2 text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">{{ feature.name }}</h2>
