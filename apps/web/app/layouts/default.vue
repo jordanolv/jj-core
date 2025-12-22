@@ -90,7 +90,7 @@ onMounted(() => {
     </div>
 
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 z-60 px-4 pb-3 sm:pb-4">
+    <nav class="fixed bottom-0 left-0 right-0 z-60 px-4 pb-6 sm:pb-4">
       <div class="mx-auto max-w-md backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl">
         <div class="flex items-center justify-around px-1 py-2">
           <template v-for="item in navItems" :key="item.id">
