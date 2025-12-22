@@ -63,7 +63,18 @@ const expenseCategories = computed(() => {
 });
 
 function getExpensesByCategory(categoryId: string) {
-  return data.value?.expenses.filter(e => e.categoryId?.toString() === categoryId) || [];
+  const expenses = data.value?.expenses.filter(e => e.categoryId?.toString() === categoryId) || [];
+  return expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+const sortedIncomes = computed(() => {
+  const incomes = data.value?.incomes || [];
+  return incomes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+});
+
+function formatDate(dateString: string) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
 }
 
 const showAddExpense = ref(false);
@@ -233,14 +244,17 @@ async function handleDeleteExpense() {
 
             <div v-if="incomesExpanded" class="px-4 sm:px-5 pb-4 space-y-2 border-t border-white/10 pt-3">
               <div
-                v-for="income in data?.incomes"
+                v-for="income in sortedIncomes"
                 :key="income.id"
                 class="flex items-center justify-between text-sm"
               >
-                <span class="text-slate-400">{{ income.description }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-slate-500">{{ formatDate(income.date) }}</span>
+                  <span class="text-slate-400">{{ income.description }}</span>
+                </div>
                 <span class="font-semibold text-emerald-400">+{{ income.amount.toFixed(2) }} €</span>
               </div>
-              <div v-if="!data?.incomes || data.incomes.length === 0" class="text-center py-4">
+              <div v-if="sortedIncomes.length === 0" class="text-center py-4">
                 <p class="text-sm text-slate-500">Aucun revenu</p>
               </div>
             </div>
@@ -307,7 +321,10 @@ async function handleDeleteExpense() {
                       @click="openEditExpense(expense)"
                       class="w-full flex items-center justify-between text-xs sm:text-sm py-2 px-2 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors"
                     >
-                      <span class="text-slate-400">{{ expense.description }}</span>
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-slate-500">{{ formatDate(expense.date) }}</span>
+                        <span class="text-slate-400">{{ expense.description }}</span>
+                      </div>
                       <span class="font-semibold text-rose-400">-{{ expense.amount.toFixed(2) }} €</span>
                     </button>
                   </div>
