@@ -78,7 +78,7 @@ onMounted(() => {
 
     <!-- Contenu -->
     <div class="relative z-10">
-      <main class="w-full pb-32 mb-4">
+      <main class="w-full pb-24">
         <PageHeader
           v-if="route.meta.pageTitle"
           :title="route.meta.pageTitle as string"
@@ -87,42 +87,42 @@ onMounted(() => {
         />
         <slot />
       </main>
-
-      <!-- Bottom Navigation -->
-      <nav class="fixed bottom-0 left-0 right-0 z-50 px-4 pb-3 sm:pb-4">
-        <div class="mx-auto max-w-md backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl">
-          <div class="flex items-center justify-around px-1 py-2">
-            <template v-for="item in navItems" :key="item.id">
-              <!-- Link items -->
-              <NuxtLink
-                v-if="item.type === 'link'"
-                :to="item.route"
-                class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all active:scale-95"
-                :class="$route.path === item.route || $route.path.startsWith(item.route + '/') ? 'text-white' : 'text-slate-400'"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIcon(item.icon)" />
-                </svg>
-                <span class="text-[10px] font-medium">{{ item.label }}</span>
-              </NuxtLink>
-
-              <!-- Action items -->
-              <button
-                v-else
-                @click="handleNavClick(item)"
-                class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all active:scale-95"
-                :class="(item.id === 'features' && showFeatureSwitcher) ? 'text-white' : 'text-slate-400'"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIcon(item.icon)" />
-                </svg>
-                <span class="text-[10px] font-medium">{{ item.label }}</span>
-              </button>
-            </template>
-          </div>
-        </div>
-      </nav>
     </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 z-50 px-4 pb-3 sm:pb-4">
+      <div class="mx-auto max-w-md backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl">
+        <div class="flex items-center justify-around px-1 py-2">
+          <template v-for="item in navItems" :key="item.id">
+            <!-- Link items -->
+            <NuxtLink
+              v-if="item.type === 'link'"
+              :to="item.route"
+              class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all active:scale-95"
+              :class="$route.path === item.route || $route.path.startsWith(item.route + '/') ? 'text-white' : 'text-slate-400'"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIcon(item.icon)" />
+              </svg>
+              <span class="text-[10px] font-medium">{{ item.label }}</span>
+            </NuxtLink>
+
+            <!-- Action items -->
+            <button
+              v-else
+              @click="handleNavClick(item)"
+              class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all active:scale-95"
+              :class="(item.id === 'features' && showFeatureSwitcher) ? 'text-white' : 'text-slate-400'"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIcon(item.icon)" />
+              </svg>
+              <span class="text-[10px] font-medium">{{ item.label }}</span>
+            </button>
+          </template>
+        </div>
+      </div>
+    </nav>
 
     <!-- Feature Switcher Modal -->
     <Transition
