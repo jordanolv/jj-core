@@ -78,7 +78,7 @@ onMounted(() => {
 
     <!-- Contenu -->
     <div class="relative z-10">
-      <main class="w-full pb-24">
+      <main class="w-full pb-32 mb-4">
         <PageHeader
           v-if="route.meta.pageTitle"
           :title="route.meta.pageTitle as string"
