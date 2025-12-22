@@ -323,8 +323,8 @@ async function handleDeleteExpense() {
       </div>
     </div>
 
-    <div v-if="showAddExpense" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showAddExpense = false">
-      <div class="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl backdrop-blur-xl bg-white/5 border-t sm:border border-white/10 p-5 sm:p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+    <div v-if="showAddExpense" class="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" @click.self="showAddExpense = false">
+      <div class="w-full sm:max-w-md rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 p-5 sm:p-6 shadow-2xl max-h-[80vh] overflow-y-auto">
         <h3 class="mb-4 text-lg sm:text-xl font-bold text-rose-300">Nouvelle dépense</h3>
         <form @submit.prevent="handleAddExpense" class="space-y-3 sm:space-y-4">
           <div>
@@ -354,8 +354,8 @@ async function handleDeleteExpense() {
       </div>
     </div>
 
-    <div v-if="showAddIncome" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showAddIncome = false">
-      <div class="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl backdrop-blur-xl bg-white/5 border-t sm:border border-white/10 p-5 sm:p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+    <div v-if="showAddIncome" class="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" @click.self="showAddIncome = false">
+      <div class="w-full sm:max-w-md rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 p-5 sm:p-6 shadow-2xl max-h-[80vh] overflow-y-auto">
         <h3 class="mb-4 text-lg sm:text-xl font-bold text-emerald-300">Nouveau revenu</h3>
         <form @submit.prevent="handleAddIncome" class="space-y-3 sm:space-y-4">
           <div>
@@ -378,8 +378,8 @@ async function handleDeleteExpense() {
       </div>
     </div>
 
-    <div v-if="showEditExpense && selectedExpense" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" @click.self="showEditExpense = false">
-      <div class="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl backdrop-blur-xl bg-white/5 border-t sm:border border-white/10 p-5 sm:p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+    <div v-if="showEditExpense && selectedExpense" class="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" @click.self="showEditExpense = false">
+      <div class="w-full sm:max-w-md rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 p-5 sm:p-6 shadow-2xl max-h-[80vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg sm:text-xl font-bold text-rose-300">Modifier la dépense</h3>
           <button @click="showEditExpense = false" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
