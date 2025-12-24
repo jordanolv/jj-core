@@ -292,7 +292,7 @@ async function handleDeleteExpense() {
 
             <div v-if="expensesExpanded" class="px-4 sm:px-5 pb-4 space-y-2 border-t border-white/10 pt-3">
               <div class="space-y-2 sm:space-y-3">
-                <div v-for="category in expenseCategories" :key="category.id" class="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                <div v-for="category in expenseCategories" :key="category.id" class="backdrop-blur-xl bg-white/2 border border-white/10 rounded-xl overflow-hidden">
                   <button
                     @click="toggleCategory(category.id)"
                     class="w-full flex items-center justify-between p-3 sm:p-4 transition-colors hover:bg-white/5"
