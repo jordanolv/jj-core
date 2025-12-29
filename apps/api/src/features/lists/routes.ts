@@ -5,28 +5,24 @@ import { alexaAuthMiddleware } from "../../middleware/alexa-auth.js";
 import { listsCollections } from "./db.js";
 import { ObjectId } from "mongodb";
 
+const router = new Hono<{ Variables: { user: AuthUser; profileId: string } }>();
+
 // Schema pour créer un item
 const createItemSchema = z.object({
   text: z.string().min(1),
 });
 
 // ==========================================
-// Routes Alexa (sans auth utilisateur)
+// Route Alexa (AVANT le middleware d'auth)
 // ==========================================
-export const alexaRouter = new Hono();
-
-// Middleware Alexa pour vérifier le secret
-alexaRouter.use("*", alexaAuthMiddleware);
-
-// Route Alexa : POST /api/lists/alexa/:id/items
-alexaRouter.post("/:id/items", async (c) => {
+// POST /api/lists/alexa/:id/items
+router.post("/alexa/:id/items", alexaAuthMiddleware, async (c) => {
   const listId = c.req.param("id");
   const body = await c.req.json();
   const data = createItemSchema.parse(body);
 
   const { lists, items } = await listsCollections();
 
-  // Vérifier que la liste existe (sans vérifier le profileId)
   const list = await lists.findOne({
     _id: new ObjectId(listId),
   });
@@ -39,7 +35,7 @@ alexaRouter.post("/:id/items", async (c) => {
 
   const result = await items.insertOne({
     listId: new ObjectId(listId),
-    profileId: list.profileId, // Utiliser le profileId de la liste
+    profileId: list.profileId,
     text: data.text,
     completed: false,
     createdAt: now,
@@ -57,8 +53,6 @@ alexaRouter.post("/:id/items", async (c) => {
 // ==========================================
 // Routes normales avec auth utilisateur
 // ==========================================
-const router = new Hono<{ Variables: { user: AuthUser; profileId: string } }>();
-
 router.use("*", betterAuthMiddleware);
 
 router.use("*", async (c, next) => {
