@@ -20,6 +20,15 @@ export const useAppFeatures = () => {
       hasSettings: true
     },
     {
+      id: 'lists',
+      name: 'Listes',
+      description: 'Gérer vos listes',
+      icon: '📝',
+      route: '/lists',
+      gradient: 'from-purple-500 to-pink-600',
+      hasSettings: false
+    },
+    {
       id: 'animaux',
       name: 'Animaux',
       description: 'Suivi des animaux',
