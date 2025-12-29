@@ -1,11 +1,67 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { betterAuthMiddleware, AuthUser } from "../../middleware/better-auth.js";
+import { alexaAuthMiddleware } from "../../middleware/alexa-auth.js";
 import { listsCollections } from "./db.js";
 import { ObjectId } from "mongodb";
 
 const router = new Hono<{ Variables: { user: AuthUser; profileId: string } }>();
 
+// ==========================================
+// Routes Alexa (sans auth utilisateur)
+// ==========================================
+const alexaRoutes = new Hono();
+
+// Middleware Alexa pour vérifier le secret
+alexaRoutes.use("*", alexaAuthMiddleware);
+
+// Schema pour créer un item
+const createItemSchema = z.object({
+  text: z.string().min(1),
+});
+
+// Route Alexa : POST /api/lists/alexa/:id/items
+alexaRoutes.post("/:id/items", async (c) => {
+  const listId = c.req.param("id");
+  const body = await c.req.json();
+  const data = createItemSchema.parse(body);
+
+  const { lists, items } = await listsCollections();
+
+  // Vérifier que la liste existe (sans vérifier le profileId)
+  const list = await lists.findOne({
+    _id: new ObjectId(listId),
+  });
+
+  if (!list) {
+    return c.json({ error: "Liste non trouvée" }, 404);
+  }
+
+  const now = new Date();
+
+  const result = await items.insertOne({
+    listId: new ObjectId(listId),
+    profileId: list.profileId, // Utiliser le profileId de la liste
+    text: data.text,
+    completed: false,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  return c.json({
+    success: true,
+    id: result.insertedId.toString(),
+    text: data.text,
+    completed: false,
+  });
+});
+
+// Monter les routes Alexa sur /alexa
+router.route("/alexa", alexaRoutes);
+
+// ==========================================
+// Routes normales avec auth utilisateur
+// ==========================================
 router.use("*", betterAuthMiddleware);
 
 router.use("*", async (c, next) => {
@@ -158,11 +214,7 @@ router.delete("/:id", async (c) => {
   return c.json({ success: true });
 });
 
-// Add an item to a list
-const createItemSchema = z.object({
-  text: z.string().min(1),
-});
-
+// Add an item to a list (route normale avec auth)
 router.post("/:id/items", async (c) => {
   const profileId = c.get("profileId");
   const listId = c.req.param("id");
