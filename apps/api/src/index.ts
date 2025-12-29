@@ -14,7 +14,7 @@ import { profilesRouter } from "./features/profiles/routes.js";
 import { budgetRouter } from "./features/budget/routes.js";
 import { notificationRouter } from "./features/notifications/routes.js";
 import { gardesRouter } from "./features/gardes/routes.js";
-import listsRouter from "./features/lists/routes.js";
+import listsRouter, { alexaRouter } from "./features/lists/routes.js";
 import { notificationRegistry } from "./features/notifications/registry.js";
 import { notificationScheduler } from "./features/notifications/scheduler.js";
 
@@ -56,6 +56,7 @@ app.route("/api/profiles", profilesRouter);
 app.route("/api/budget", budgetRouter);
 app.route("/api/notifications", notificationRouter);
 app.route("/api/gardes", gardesRouter);
+app.route("/api/lists/alexa", alexaRouter);
 app.route("/api/lists", listsRouter);
 
 const port = Number(process.env.PORT) || 4491;

@@ -5,23 +5,21 @@ import { alexaAuthMiddleware } from "../../middleware/alexa-auth.js";
 import { listsCollections } from "./db.js";
 import { ObjectId } from "mongodb";
 
-const router = new Hono<{ Variables: { user: AuthUser; profileId: string } }>();
-
-// ==========================================
-// Routes Alexa (sans auth utilisateur)
-// ==========================================
-const alexaRoutes = new Hono();
-
-// Middleware Alexa pour vérifier le secret
-alexaRoutes.use("*", alexaAuthMiddleware);
-
 // Schema pour créer un item
 const createItemSchema = z.object({
   text: z.string().min(1),
 });
 
+// ==========================================
+// Routes Alexa (sans auth utilisateur)
+// ==========================================
+export const alexaRouter = new Hono();
+
+// Middleware Alexa pour vérifier le secret
+alexaRouter.use("*", alexaAuthMiddleware);
+
 // Route Alexa : POST /api/lists/alexa/:id/items
-alexaRoutes.post("/:id/items", async (c) => {
+alexaRouter.post("/:id/items", async (c) => {
   const listId = c.req.param("id");
   const body = await c.req.json();
   const data = createItemSchema.parse(body);
@@ -56,12 +54,11 @@ alexaRoutes.post("/:id/items", async (c) => {
   });
 });
 
-// Monter les routes Alexa sur /alexa
-router.route("/alexa", alexaRoutes);
-
 // ==========================================
 // Routes normales avec auth utilisateur
 // ==========================================
+const router = new Hono<{ Variables: { user: AuthUser; profileId: string } }>();
+
 router.use("*", betterAuthMiddleware);
 
 router.use("*", async (c, next) => {
