@@ -5,6 +5,7 @@ import { useProfiles } from "../features/profiles/composables/useProfiles";
 definePageMeta({
   middleware: ["authenticated"],
   pageTitle: "Home",
+  pageDescription: "Page d'accueil",
 });
 
 const auth = useAuth();

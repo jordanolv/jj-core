@@ -11,7 +11,7 @@ interface SettingsItem {
 definePageMeta({
   middleware: ["authenticated"],
   pageTitle: "Paramètres",
-  pageDescription: "Gérer votre compte et vos préférences",
+  pageDescription: "Gérer vos settings",
 });
 
 const { featuresWithSettings } = useAppFeatures();

@@ -40,11 +40,7 @@ if (process.env.APITALLY_CLIENT_ID) {
 app.use(
   "*",
   cors({
-    origin: (origin) => {
-      // Si c'est une requête Alexa (avec le header X-Alexa-Secret), accepter toutes les origines
-      // Sinon, utiliser la whitelist normale
-      return process.env.CORS_ORIGIN || "http://localhost:3000";
-    },
+    origin: process.env.CORS_ORIGIN || "http://jjhub.local:4490",
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization", "X-Profile-Id", "X-Alexa-Secret", "User-Agent"],
     credentials: true,

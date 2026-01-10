@@ -13,18 +13,28 @@ const { selectedProfile, loadSelectedProfile } = useProfiles();
 
 const gardes = ref<Garde[]>([]);
 const loading = ref(true);
-const showShared = ref(false);
+const showCommon = ref(true);
+const showPersonal = ref(true);
 
 async function loadData() {
   loading.value = true;
   try {
-    gardes.value = await getGardes(showShared.value);
+    // Toujours charger toutes les gardes (personnelles + partagées)
+    gardes.value = await getGardes(true);
   } catch (error) {
     console.error("Failed to fetch gardes", error);
   } finally {
     loading.value = false;
   }
 }
+
+const filteredGardes = computed(() => {
+  return gardes.value.filter((garde) => {
+    if (!showCommon.value && garde.isShared) return false;
+    if (!showPersonal.value && !garde.isShared) return false;
+    return true;
+  });
+})
 
 onMounted(async () => {
   loadSelectedProfile();
@@ -35,28 +45,24 @@ onMounted(async () => {
   await loadData();
 });
 
-watch(showShared, () => {
-  loadData();
-});
-
 const totalRevenu = computed(() => {
-  return gardes.value
+  return filteredGardes.value
     .filter((g) => g.statut === "terminé")
     .reduce((sum, g) => sum + g.tarif, 0);
 });
 
 const revenuAVenir = computed(() => {
-  return gardes.value
+  return filteredGardes.value
     .filter((g) => g.statut === "confirmé" || g.statut === "en_cours")
     .reduce((sum, g) => sum + g.tarif, 0);
 });
 
 const gardesTerminees = computed(() => {
-  return gardes.value.filter((g) => g.statut === "terminé").length;
+  return filteredGardes.value.filter((g) => g.statut === "terminé").length;
 });
 
 const gardesAVenir = computed(() => {
-  return gardes.value.filter((g) => g.statut === "confirmé" || g.statut === "en_cours").length;
+  return filteredGardes.value.filter((g) => g.statut === "confirmé" || g.statut === "en_cours").length;
 });
 
 function formatCurrency(amount: number) {
@@ -121,26 +127,38 @@ function navigateToEdit(id: string) {
 <template>
   <div class="px-4 pb-4 sm:px-6 sm:pb-6">
     <div class="mx-auto max-w-2xl">
-      <!-- Add garde button -->
-      <div class="flex justify-end mb-6">
+      <!-- Filter buttons and Add garde button -->
+      <div class="mb-6 flex justify-between items-center">
+        <div class="flex gap-2">
+          <button
+            @click="showCommon = !showCommon"
+            :class="[
+              'px-4 py-2 rounded-lg font-semibold text-sm uppercase transition-all active:scale-95 backdrop-blur-xl border',
+              showCommon
+                ? 'bg-purple-500/30 border-purple-400/50 text-purple-200'
+                : 'bg-white/5 border-white/20 text-slate-400'
+            ]"
+          >
+            COMMUNE
+          </button>
+          <button
+            @click="showPersonal = !showPersonal"
+            :class="[
+              'px-4 py-2 rounded-lg font-semibold text-sm uppercase transition-all active:scale-95 backdrop-blur-xl border',
+              showPersonal
+                ? 'bg-purple-500/30 border-purple-400/50 text-purple-200'
+                : 'bg-white/5 border-white/20 text-slate-400'
+            ]"
+          >
+            {{ selectedProfile?.name || 'Personnel' }}
+          </button>
+        </div>
         <button
           @click="navigateToNew"
           class="px-4 py-2 rounded-lg bg-gradient-to-r from-rose-400 to-pink-400 text-white font-semibold shadow-md transition-all active:scale-95"
         >
           + Nouvelle
         </button>
-      </div>
-
-      <!-- Filter for shared gardes -->
-      <div class="mb-6 flex justify-end">
-        <label class="inline-flex items-center gap-2 cursor-pointer backdrop-blur-xl bg-white/10 border border-white/20 rounded-full px-4 py-2">
-          <input
-            v-model="showShared"
-            type="checkbox"
-            class="rounded border-white/20"
-          />
-          <span class="text-sm text-white">Afficher les gardes partagées</span>
-        </label>
       </div>
 
       <!-- Stats Cards -->
@@ -182,14 +200,14 @@ function navigateToEdit(id: string) {
       </div>
 
       <!-- Liste des gardes -->
-      <div v-else-if="gardes.length === 0" class="text-center py-12 backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl">
+      <div v-else-if="filteredGardes.length === 0" class="text-center py-12 backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl">
         <div class="w-16 h-16 rounded-full bg-gradient-to-br from-rose-400 to-pink-400 flex items-center justify-center mx-auto mb-4">
           <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
         <h3 class="text-lg font-bold text-white mb-2">Aucune garde</h3>
-        <p class="text-sm text-slate-300 mb-4">Commencez par créer votre première garde</p>
+        <p class="text-sm text-slate-300 mb-4">Aucune garde ne correspond aux filtres sélectionnés</p>
         <button
           @click="navigateToNew"
           class="px-4 py-2 rounded-lg bg-gradient-to-r from-rose-400 to-pink-400 text-white font-semibold shadow-md transition-all active:scale-95"
@@ -201,7 +219,7 @@ function navigateToEdit(id: string) {
       <!-- Gardes list -->
       <div v-else class="space-y-2">
         <div
-          v-for="garde in gardes"
+          v-for="garde in filteredGardes"
           :key="garde.id"
           class="backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl p-4 transition-all hover:bg-white/15 active:bg-white/5"
         >
